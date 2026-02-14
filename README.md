@@ -2,7 +2,21 @@
 
 **[minigames.cool](https://minigames.cool)**
 
-A multi-tenant STEM gaming platform with 25 educational minigames, built with Phaser 3 and an Express.js API backend. Hosted on Vercel with a custom domain on GoDaddy.
+A multi-tenant STEM gaming platform with 25 educational minigames, built with Phaser 3 and an Express.js API backend. Features game categories, multiplayer, subscription billing, leaderboards, and admin game management. Hosted on Vercel with a custom domain.
+
+## Features
+
+- **25 Educational Games** covering physics, chemistry, engineering, biology, computer science, and more
+- **Game Categories** with filterable tabs and grouped display
+- **Multiplayer** with WebSocket rooms, matchmaking, and real-time gameplay
+- **Subscription Billing** via Stripe (Free, Starter, Pro, Enterprise tiers)
+- **Leaderboards** with sharded Redis caching and seasonal rankings
+- **Admin Panel** for managing custom games and categories
+- **Cloud Save** with offline-first local storage and server sync
+- **Multi-Tenant** architecture for white-label deployments
+- **SEO Optimized** with Open Graph, Twitter Cards, JSON-LD structured data
+- **WCAG AA Accessible** with keyboard navigation, ARIA roles, screen reader support, reduced motion
+- **In-Game Economy** with virtual currency wallet and battle pass
 
 ## Project Structure
 
@@ -10,40 +24,78 @@ A multi-tenant STEM gaming platform with 25 educational minigames, built with Ph
 minigames/
 ├── api/index.js              # Vercel serverless entry point
 ├── assets/svg/               # 12 character SVG sprites
-├── js/                       # Phaser game engine + 25 game modules
+├── css/styles.css            # Global styles (responsive, accessible)
+├── js/
+│   ├── engine/               # Game engine core (7 modules)
+│   │   ├── BootScene.js      # Universal boot/preload scene
+│   │   ├── CharacterFactory.js # Character sprite generator
+│   │   ├── CloudSyncAPI.js   # Cloud save/sync client
+│   │   ├── GameRegistry.js   # Game + category registry
+│   │   ├── Launcher.js       # Game grid UI + Phaser launcher
+│   │   ├── MultiplayerClient.js # WebSocket game client
+│   │   └── SaveManager.js    # Local + cloud save manager
+│   ├── games/                # 25 Phaser game scene modules
+│   ├── admin-games.js        # Admin game/category management UI
+│   ├── lobby-ui.js           # Multiplayer lobby UI
+│   └── site-ui.js            # Auth, billing, modal management
 ├── server/                   # Express.js API backend
 │   ├── config/               # App configuration
-│   ├── middleware/            # Auth, entitlements, admin, rate limiting
-│   ├── routes/               # API route handlers
-│   ├── services/             # Stripe, subscriptions, usage meters, storage
-│   └── tests/                # Test suite (89 tests)
+│   ├── middleware/            # Auth, rate limiting, tenancy, monitoring
+│   ├── models/               # PostgreSQL connection pool
+│   ├── multiplayer/          # WebSocket server, rooms, matchmaking, anti-cheat
+│   ├── routes/               # 15 API route modules
+│   ├── services/             # Stripe, caching, leaderboards, achievements
+│   └── tests/                # Test suite (8 test files)
 ├── admin/                    # Admin console SPA
-├── db/migrations/            # PostgreSQL migrations
+├── db/migrations/            # 7 PostgreSQL migrations
+├── docs/                     # Project documentation
 ├── vercel.json               # Vercel deployment config
 └── package.json              # Root package
 ```
 
-## Deploy to Vercel
+## Quick Start
 
 ### Prerequisites
 
-- A [Vercel](https://vercel.com) account
-- [Vercel CLI](https://vercel.com/docs/cli) installed (`npm i -g vercel`)
-- A PostgreSQL database (e.g. [Neon](https://neon.tech), [Supabase](https://supabase.com), or [Vercel Postgres](https://vercel.com/storage/postgres))
-- A Redis instance (e.g. [Upstash](https://upstash.com) or [Vercel KV](https://vercel.com/storage/kv))
-- A [Stripe](https://stripe.com) account (for billing features)
+- Node.js 18+
+- PostgreSQL 14+
+- Redis 7+
+- [Stripe](https://stripe.com) account (for billing)
 
-### 1. Clone and install
+### Local Development
 
 ```bash
+# Clone and install
 git clone <your-repo-url>
 cd minigames
 cd server && npm install
+
+# Configure environment
+cp .env.example .env
+# Edit .env with your database, Redis, and Stripe credentials
+
+# Run migrations
+npm run migrate
+
+# Start dev server (Express + WebSocket)
+npm run dev
+
+# Run tests
+npm test
 ```
 
-### 2. Run database migrations
+The app serves on `http://localhost:3000`. The API is at `/api/v1/*` and the WebSocket server at `ws://localhost:3000/ws`.
 
-Connect to your PostgreSQL database and run the migrations in order:
+## Deploy to Vercel
+
+### 1. Provision Infrastructure
+
+You need:
+- **PostgreSQL** database (e.g. [Neon](https://neon.tech), [Supabase](https://supabase.com), or [Vercel Postgres](https://vercel.com/storage/postgres))
+- **Redis** instance (e.g. [Upstash](https://upstash.com) or [Vercel KV](https://vercel.com/storage/kv))
+- **Stripe** account with products/prices configured
+
+### 2. Run Database Migrations
 
 ```bash
 psql $DATABASE_URL -f db/migrations/001_initial_schema.sql
@@ -52,92 +104,64 @@ psql $DATABASE_URL -f db/migrations/003_comments_reviews_moderation.sql
 psql $DATABASE_URL -f db/migrations/004_multiplayer.sql
 psql $DATABASE_URL -f db/migrations/005_custom_games.sql
 psql $DATABASE_URL -f db/migrations/006_multiplayer_tech_stack.sql
+psql $DATABASE_URL -f db/migrations/007_game_categories.sql
 ```
 
-### 3. Configure environment variables
+### 3. Configure Environment Variables
 
-Set the following environment variables in the Vercel dashboard (**Settings > Environment Variables**) or via the CLI:
+Set the following in the Vercel dashboard (**Settings > Environment Variables**):
 
 ```bash
 # PostgreSQL
-vercel env add DB_HOST
-vercel env add DB_PORT
-vercel env add DB_NAME
-vercel env add DB_USER
-vercel env add DB_PASSWORD
+DB_HOST, DB_PORT, DB_NAME, DB_USER, DB_PASSWORD
 
 # Redis
-vercel env add REDIS_HOST
-vercel env add REDIS_PORT
-vercel env add REDIS_PASSWORD
+REDIS_HOST, REDIS_PORT, REDIS_PASSWORD
 
 # JWT
-vercel env add JWT_SECRET
+JWT_SECRET
 
 # CORS
-vercel env add CORS_ORIGINS          # https://minigames.cool
+CORS_ORIGINS=https://minigames.cool
 
 # Multi-tenancy
-vercel env add DEFAULT_TENANT_ID     # e.g. stem_default
+DEFAULT_TENANT_ID=stem_default
 
 # Stripe
-vercel env add STRIPE_SECRET_KEY
-vercel env add STRIPE_PUBLISHABLE_KEY
-vercel env add STRIPE_WEBHOOK_SECRET
-vercel env add STRIPE_PRICING_TABLE_ID
-vercel env add STRIPE_PRICE_STARTER
-vercel env add STRIPE_PRICE_PRO
-vercel env add STRIPE_PRICE_ENTERPRISE
+STRIPE_SECRET_KEY, STRIPE_PUBLISHABLE_KEY, STRIPE_WEBHOOK_SECRET
+STRIPE_PRICE_STARTER, STRIPE_PRICE_PRO, STRIPE_PRICE_ENTERPRISE
 ```
 
-See `server/.env.example` for the full list of available variables and defaults.
+See `server/.env.example` for the full list with defaults.
 
 ### 4. Deploy
 
 ```bash
-# Link to your Vercel project (first time only)
-vercel link
-
-# Deploy to preview
-vercel
-
-# Deploy to production
-vercel --prod
+vercel link        # First time: link to your Vercel project
+vercel             # Deploy to preview
+vercel --prod      # Deploy to production
 ```
 
-### 5. Connect custom domain (GoDaddy)
-
-The production domain is **minigames.cool**, registered on [GoDaddy](https://godaddy.com).
-
-1. In the Vercel dashboard go to **Settings > Domains** and add `minigames.cool`.
-2. Vercel will show the required DNS records. In GoDaddy DNS Management:
+### 5. Connect Domain (GoDaddy)
 
 | Type | Name | Value |
 |---|---|---|
 | A | @ | `76.76.21.21` |
 | CNAME | www | `cname.vercel-dns.com` |
 
-3. Remove any conflicting A or CNAME records for `@` and `www` in GoDaddy.
-4. Wait for DNS propagation (usually a few minutes, up to 48 hours).
-5. Vercel will automatically provision an SSL certificate once DNS resolves.
+### 6. Configure Stripe Webhooks
 
-### 6. Set up Stripe webhooks
+Create a webhook endpoint at `https://minigames.cool/api/v1/webhooks/stripe` with events:
+- `customer.subscription.created`, `.updated`, `.deleted`
+- `invoice.payment_succeeded`, `.payment_failed`
+- `customer.subscription.trial_will_end`
+- `checkout.session.completed`
 
-After deploying, create a webhook endpoint in the [Stripe Dashboard](https://dashboard.stripe.com/webhooks):
+### Multiplayer (WebSocket)
 
-- **Endpoint URL**: `https://minigames.cool/api/v1/webhooks/stripe`
-- **Events to listen for**:
-  - `customer.subscription.created`
-  - `customer.subscription.updated`
-  - `customer.subscription.deleted`
-  - `invoice.payment_succeeded`
-  - `invoice.payment_failed`
-  - `customer.subscription.trial_will_end`
-  - `checkout.session.completed`
+WebSockets require a persistent server. Deploy the server separately to Railway, Fly.io, or Render and set the `WS_URL` environment variable. Vercel handles REST API + static frontend.
 
-Update the `STRIPE_WEBHOOK_SECRET` environment variable with the signing secret from the new endpoint.
-
-### Deployment details
+### Deployment Details
 
 | Setting | Value |
 |---|---|
@@ -146,72 +170,103 @@ Update the `STRIPE_WEBHOOK_SECRET` environment variable with the signing secret 
 | Install command | `cd server && npm install` |
 | Function memory | 512 MB |
 | Function timeout | 30 seconds |
-| API route | `/api/v1/*` rewrites to `api/index.js` |
-| Custom domain | `minigames.cool` (GoDaddy DNS → Vercel) |
+| API route | `/api/v1/*` → `api/index.js` |
+| Domain | `minigames.cool` (GoDaddy → Vercel) |
 
-The Express app uses lazy initialization for database and Redis connections, so cold starts only connect on the first request. Connections persist across warm function invocations.
+## API Reference
 
-### Multiplayer (WebSocket server)
+See [docs/API.md](docs/API.md) for the complete API reference.
 
-The multiplayer system uses WebSockets for real-time game communication. In local development, the WebSocket server attaches automatically to the Express HTTP server on `/ws`.
+### Key Endpoints
 
-For production, WebSockets require a persistent server (not serverless). Deploy the server to a platform that supports long-lived connections (e.g. Railway, Fly.io, Render, or a VPS) and point the `WS_URL` environment variable to it. The Vercel deployment handles the REST API and static frontend; the WebSocket server runs separately.
+| Route | Auth | Description |
+|---|---|---|
+| `POST /api/v1/auth/register` | - | Register player |
+| `POST /api/v1/auth/login` | - | Login (JWT) |
+| `GET /api/v1/games/categories` | - | List game categories |
+| `GET /api/v1/games/custom` | - | List custom games |
+| `POST /api/v1/scores` | JWT | Submit score |
+| `GET /api/v1/leaderboards/:gameId/ranked` | Optional | Ranked leaderboard |
+| `GET /api/v1/billing/status` | JWT | Subscription status |
+| `POST /api/v1/billing/subscribe` | JWT | Start subscription |
+| `POST /api/v1/multiplayer/rooms` | JWT | Create game room |
+| `GET /api/v1/multiplayer/rooms` | JWT | List open rooms |
+| `WS /ws` | Token | Real-time game WebSocket |
+| `GET /api/v1/health` | - | Health check |
 
-## Local Development
+## Game Development
 
-```bash
-# Copy env template
-cp server/.env.example server/.env
-# Edit server/.env with your local values
+See [docs/GAME_DEVELOPMENT.md](docs/GAME_DEVELOPMENT.md) for how to create new games.
 
-# Install dependencies
-cd server && npm install
+### Game Registration Pattern
 
-# Start the dev server
-npm run dev
+```javascript
+class MyGame extends Phaser.Scene {
+    constructor() { super({ key: 'MyGame' }); }
+    create() { /* setup */ }
+    update() { /* game loop */ }
+    shutdown() { /* cleanup arrays */ }
+}
 
-# Run tests
-npm test
+GameRegistry.register({
+    id: 'MyGame',
+    title: 'My Game',
+    classic: 'Reference Game',
+    character: 'guha',
+    mechanic: 'Short description',
+    iconColor: '#333',
+    iconEmoji: '🎮',
+    scene: MyGame,
+    physics: 'matter' // optional: 'matter' | 'arcade' | omit for none
+});
 ```
 
-## API Endpoints
+## Performance
 
-| Route | Description |
+See [docs/PERFORMANCE.md](docs/PERFORMANCE.md) for optimization guidelines.
+
+Key optimizations applied:
+- Per-game physics engine loading (only Matter.js for billiards, none for others)
+- Binary search for terrain height lookups (O(log n) vs O(n))
+- Throttled DOM score updates (only on change)
+- Static background rendering (drawn once, not per-frame)
+- Scene shutdown cleanup methods
+
+## Architecture
+
+See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for system design details.
+
+## Tech Stack
+
+| Layer | Technology |
 |---|---|
-| `POST /api/v1/auth/register` | Register a new player |
-| `POST /api/v1/auth/login` | Login and receive JWT |
-| `POST /api/v1/scores` | Submit a game score |
-| `GET /api/v1/leaderboard/:gameId` | Get leaderboard |
-| `GET /api/v1/billing/plans` | List subscription plans |
-| `POST /api/v1/billing/subscribe` | Start a subscription |
-| `GET /api/v1/billing/status` | Get subscription status |
-| `POST /api/v1/billing/portal` | Create Stripe billing portal session |
-| `GET /api/v1/comments/:gameId` | Get comments for a game |
-| `POST /api/v1/comments/:gameId` | Post a comment |
-| `GET /api/v1/admin/dashboard` | Admin dashboard stats |
-| **Multiplayer** | |
-| `POST /api/v1/multiplayer/rooms` | Create a game room |
-| `GET /api/v1/multiplayer/rooms` | List open rooms |
-| `POST /api/v1/multiplayer/matchmake` | Quick matchmaking |
-| `WS /ws` | Real-time game WebSocket |
-| **Friends** | |
-| `GET /api/v1/friends` | List friends |
-| `POST /api/v1/friends/request` | Send friend request |
-| `GET /api/v1/friends/online` | Online friends |
-| `GET /api/v1/friends/search` | Search players |
-| **Economy** | |
-| `GET /api/v1/economy/wallet` | Get wallet balances |
-| `GET /api/v1/economy/store` | List store items |
-| `POST /api/v1/economy/store/purchase` | Purchase item |
-| `GET /api/v1/economy/battlepass/progress` | Battle pass progress |
-| **Leaderboards** | |
-| `GET /api/v1/leaderboards/:gameId/ranked` | Season ranked leaderboard |
-| `GET /api/v1/leaderboards/:gameId/friends` | Friend leaderboard |
-| `GET /api/v1/leaderboards/seasons/current` | Current season info |
-| **Compliance** | |
-| `POST /api/v1/compliance/export` | GDPR data export |
-| `POST /api/v1/compliance/delete` | GDPR data deletion |
-| `GET /api/v1/compliance/privacy-policy` | Privacy policy |
-| **Monitoring** | |
-| `GET /api/v1/health` | Health check |
-| `GET /api/v1/metrics` | Prometheus/JSON metrics |
+| Game Engine | Phaser 3.60.0 (WebGL/Canvas) |
+| Frontend | Vanilla JS, CSS3 |
+| Backend | Express.js 4.18 |
+| Database | PostgreSQL 14+ |
+| Cache | Redis 7+ (sorted sets for leaderboards) |
+| Billing | Stripe (subscriptions, webhooks) |
+| Realtime | WebSocket (ws 8.16) |
+| Hosting | Vercel (serverless) |
+| Domain | GoDaddy DNS → Vercel |
+
+## Testing
+
+```bash
+cd server && npm test
+```
+
+Tests cover: billing, entitlements, organisations, storage quotas, Stripe service, subscription sync, usage meters, webhooks.
+
+## Browser Support
+
+- Chrome 90+ (primary target)
+- Firefox 90+
+- Safari 15+
+- Edge 90+
+
+Phaser 3.60 uses WebGL with Canvas fallback. All CSS uses standard properties with `backdrop-filter` having wide support. `-webkit-background-clip` is prefixed for gradient text.
+
+## License
+
+Proprietary. All rights reserved.

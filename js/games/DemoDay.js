@@ -250,6 +250,11 @@ class DemoDay extends Phaser.Scene {
 
         this._drawBlocks();
     }
+
+    shutdown() {
+        this.blocks = [];
+        this.debris = [];
+    }
 }
 
 GameRegistry.register({

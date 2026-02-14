@@ -228,6 +228,16 @@ const Launcher = (() => {
         const w = container.clientWidth;
         const h = container.clientHeight;
 
+        // Build physics config based on game requirements
+        const physicsConfig = {};
+        if (game.physics === 'matter') {
+            physicsConfig.default = 'matter';
+            physicsConfig.matter = { gravity: { y: 0 }, debug: false };
+        } else if (game.physics === 'arcade') {
+            physicsConfig.default = 'arcade';
+            physicsConfig.arcade = { gravity: { y: 0 }, debug: false };
+        }
+
         // Create new Phaser instance
         _phaserInstance = new Phaser.Game({
             type: Phaser.AUTO,
@@ -239,17 +249,7 @@ const Launcher = (() => {
                 mode: Phaser.Scale.FIT,
                 autoCenter: Phaser.Scale.CENTER_BOTH
             },
-            physics: {
-                default: 'matter',
-                matter: {
-                    gravity: { y: 0 },
-                    debug: false
-                },
-                arcade: {
-                    gravity: { y: 0 },
-                    debug: false
-                }
-            },
+            physics: Object.keys(physicsConfig).length > 0 ? physicsConfig : undefined,
             scene: [BootScene, game.scene],
             input: {
                 activePointers: 3  // Multi-touch support

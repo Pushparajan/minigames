@@ -230,6 +230,12 @@ class RobotRepairBay extends Phaser.Scene {
     }
 
     update() {}
+
+    shutdown() {
+        this.grid = [];
+        this.flowCells = null;
+        this.pipeTypeKeys = [];
+    }
 }
 
 GameRegistry.register({

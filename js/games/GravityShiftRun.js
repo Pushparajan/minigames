@@ -196,6 +196,11 @@ class GravityShiftRun extends Phaser.Scene {
                 fontFamily: 'sans-serif', fontStyle: 'bold'
             }).setOrigin(0.5).setDepth(20);
     }
+
+    shutdown() {
+        this.obstacles = [];
+        this.gameOver = false;
+    }
 }
 
 GameRegistry.register({

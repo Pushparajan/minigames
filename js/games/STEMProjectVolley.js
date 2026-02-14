@@ -287,6 +287,10 @@ class STEMProjectVolley extends Phaser.Scene {
                 fontFamily: 'sans-serif', fontStyle: 'bold'
             }).setOrigin(0.5).setDepth(20);
     }
+
+    shutdown() {
+        this.projectiles = [];
+    }
 }
 
 GameRegistry.register({

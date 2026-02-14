@@ -279,6 +279,11 @@ class SafetyFirstDefense extends Phaser.Scene {
             this.time.delayedCall(1500, () => this._spawnWave());
         }
     }
+
+    shutdown() {
+        this.enemies = [];
+        this.enemyBullets = [];
+    }
 }
 
 GameRegistry.register({

@@ -258,6 +258,10 @@ class LogicronsGridShift extends Phaser.Scene {
     update() {
         // Static game — all logic is event-driven
     }
+
+    shutdown() {
+        this.levelData = [];
+    }
 }
 
 GameRegistry.register({

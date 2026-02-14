@@ -276,6 +276,12 @@ class FindThePrincipal extends Phaser.Scene {
             this.spriteGraphics.fillCircle(ex + 2, ey - 5, 2);
         });
     }
+
+    shutdown() {
+        this.enemies = [];
+        this.ladders = [];
+        this.floors = [];
+    }
 }
 
 GameRegistry.register({

@@ -142,8 +142,11 @@ class ParkourLab extends Phaser.Scene {
         // Auto-run
         this.speed = Math.min(this.maxSpeed, this.speed + 0.003);
         this.scrollX += this.speed;
-        this.score = Math.floor(this.scrollX / 5);
-        Launcher.updateScore(this.score);
+        const newScore = Math.floor(this.scrollX / 5);
+        if (newScore !== this.score) {
+            this.score = newScore;
+            Launcher.updateScore(this.score);
+        }
 
         // Stumble recovery
         if (this.stumbling) {
@@ -293,6 +296,12 @@ class ParkourLab extends Phaser.Scene {
             this.playerGraphics.fillRect(px - 4 + legPhase * 4, py + 14, 4, 8);
             this.playerGraphics.fillRect(px + 0 - legPhase * 4, py + 14, 4, 8);
         }
+    }
+
+    shutdown() {
+        this.obstacles = [];
+        this.platforms = [];
+        this.gameOver = false;
     }
 }
 

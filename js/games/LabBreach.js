@@ -199,6 +199,11 @@ class LabBreach extends Phaser.Scene {
             }
         }
     }
+
+    shutdown() {
+        this.enemies = [];
+        this.bullets = [];
+    }
 }
 
 GameRegistry.register({

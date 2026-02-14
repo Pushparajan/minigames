@@ -243,6 +243,13 @@ class HydroLogicPuzzles extends Phaser.Scene {
     }
 
     update() {}
+
+    shutdown() {
+        this.grid = [];
+        this.orbs = [];
+        this.targets = [];
+        this.levels = [];
+    }
 }
 
 GameRegistry.register({

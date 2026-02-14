@@ -219,6 +219,10 @@ class GeologyDeepDive extends Phaser.Scene {
     update() {
         // Event-driven game
     }
+
+    shutdown() {
+        this.grid = [];
+    }
 }
 
 GameRegistry.register({

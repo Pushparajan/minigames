@@ -276,6 +276,10 @@ class ChemistryEscape extends Phaser.Scene {
         this.playerGraphics.fillCircle(px - 2, py - 7, 1.5);
         this.playerGraphics.fillCircle(px + 2, py - 7, 1.5);
     }
+
+    shutdown() {
+        this.levelMap = [];
+    }
 }
 
 GameRegistry.register({

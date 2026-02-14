@@ -351,6 +351,12 @@ class PhysicsMasterBilliards extends Phaser.Scene {
             }
         });
     }
+
+    shutdown() {
+        this.pockets = [];
+        this.targetBalls = [];
+        this.cueBall = null;
+    }
 }
 
 // Register the game
@@ -362,5 +368,6 @@ GameRegistry.register({
     mechanic: 'Matter.js physics with power-drag aiming logic',
     iconColor: '#0d6b3b',
     iconEmoji: '🎱',
-    scene: PhysicsMasterBilliards
+    scene: PhysicsMasterBilliards,
+    physics: 'matter'
 });
