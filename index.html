@@ -3,10 +3,34 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>STEM School Adventures</title>
+    <title>STEM School Adventures — minigames.cool</title>
     <link rel="stylesheet" href="css/styles.css">
 </head>
 <body>
+    <!-- Top Navigation Bar -->
+    <nav id="top-nav">
+        <div class="nav-left">
+            <a href="/" class="nav-brand">STEM School Adventures</a>
+        </div>
+        <div class="nav-right">
+            <button id="nav-plans-btn" class="nav-link" onclick="SiteUI.showPlans()">Plans</button>
+            <!-- Logged out state -->
+            <div id="nav-guest" class="nav-auth">
+                <button class="btn-outline" onclick="SiteUI.showLogin()">Log In</button>
+                <button class="btn-primary" onclick="SiteUI.showRegister()">Sign Up</button>
+            </div>
+            <!-- Logged in state -->
+            <div id="nav-user" class="nav-auth" style="display:none;">
+                <button class="nav-link" onclick="LobbyUI.show()">Multiplayer</button>
+                <button id="nav-admin-btn" class="nav-link" onclick="AdminGames.show()" style="display:none;">Admin</button>
+                <button id="nav-billing-btn" class="nav-link" onclick="SiteUI.showBilling()">Billing</button>
+                <span id="nav-username" class="nav-username"></span>
+                <button class="btn-outline btn-sm" onclick="SiteUI.logout()">Log Out</button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Launcher Screen -->
     <div id="launcher">
         <header class="launcher-header">
             <h1>STEM School Adventures</h1>
@@ -14,6 +38,8 @@
         </header>
         <div id="game-grid" class="game-grid"></div>
     </div>
+
+    <!-- Game Container -->
     <div id="game-container" style="display:none;">
         <div id="game-hud">
             <button id="btn-back" class="hud-btn">&larr; Back</button>
@@ -21,6 +47,243 @@
             <span id="hud-score">Score: 0</span>
         </div>
         <div id="phaser-container"></div>
+    </div>
+
+    <!-- Modal Overlay -->
+    <div id="modal-overlay" class="modal-overlay" style="display:none;" onclick="SiteUI.closeModal(event)">
+        <!-- Login Modal -->
+        <div id="modal-login" class="modal" style="display:none;">
+            <h2>Log In</h2>
+            <form onsubmit="SiteUI.handleLogin(event)">
+                <input type="email" id="login-email" placeholder="Email" required autocomplete="email">
+                <input type="password" id="login-password" placeholder="Password" required autocomplete="current-password">
+                <div id="login-error" class="form-error"></div>
+                <button type="submit" class="btn-primary btn-full">Log In</button>
+            </form>
+            <p class="modal-switch">No account? <a href="#" onclick="SiteUI.showRegister(); return false;">Sign up</a></p>
+            <button class="modal-close" onclick="SiteUI.closeModal()">&times;</button>
+        </div>
+
+        <!-- Register Modal -->
+        <div id="modal-register" class="modal" style="display:none;">
+            <h2>Create Account</h2>
+            <form onsubmit="SiteUI.handleRegister(event)">
+                <input type="text" id="reg-name" placeholder="Display Name" required minlength="2" maxlength="30" autocomplete="username">
+                <input type="email" id="reg-email" placeholder="Email" required autocomplete="email">
+                <input type="password" id="reg-password" placeholder="Password (min 8 chars)" required minlength="8" autocomplete="new-password">
+                <div id="reg-error" class="form-error"></div>
+                <button type="submit" class="btn-primary btn-full">Create Account</button>
+            </form>
+            <p class="modal-switch">Have an account? <a href="#" onclick="SiteUI.showLogin(); return false;">Log in</a></p>
+            <button class="modal-close" onclick="SiteUI.closeModal()">&times;</button>
+        </div>
+
+        <!-- Plans Modal -->
+        <div id="modal-plans" class="modal modal-wide" style="display:none;">
+            <h2>Subscription Plans</h2>
+            <div id="plans-grid" class="plans-grid">
+                <div class="plan-card">
+                    <h3>Free</h3>
+                    <div class="plan-price">$0</div>
+                    <ul>
+                        <li>Play all 25 games</li>
+                        <li>Local save progress</li>
+                        <li>View leaderboards</li>
+                    </ul>
+                    <button class="btn-outline btn-full" disabled>Current</button>
+                </div>
+                <div class="plan-card plan-featured">
+                    <span class="plan-badge">Popular</span>
+                    <h3>Starter</h3>
+                    <div class="plan-price">$4.99<span>/mo</span></div>
+                    <ul>
+                        <li>Everything in Free</li>
+                        <li>Cloud sync &amp; backup</li>
+                        <li>Submit to leaderboards</li>
+                        <li>Comments &amp; reviews</li>
+                    </ul>
+                    <button class="btn-primary btn-full" onclick="SiteUI.subscribe('starter')">Subscribe</button>
+                </div>
+                <div class="plan-card">
+                    <h3>Pro</h3>
+                    <div class="plan-price">$9.99<span>/mo</span></div>
+                    <ul>
+                        <li>Everything in Starter</li>
+                        <li>Create organisations</li>
+                        <li>Priority support</li>
+                        <li>Advanced analytics</li>
+                    </ul>
+                    <button class="btn-primary btn-full" onclick="SiteUI.subscribe('pro')">Subscribe</button>
+                </div>
+                <div class="plan-card">
+                    <h3>Enterprise</h3>
+                    <div class="plan-price">$29.99<span>/mo</span></div>
+                    <ul>
+                        <li>Everything in Pro</li>
+                        <li>Unlimited members</li>
+                        <li>Custom branding</li>
+                        <li>Dedicated support</li>
+                    </ul>
+                    <button class="btn-primary btn-full" onclick="SiteUI.subscribe('enterprise')">Subscribe</button>
+                </div>
+            </div>
+            <button class="modal-close" onclick="SiteUI.closeModal()">&times;</button>
+        </div>
+
+        <!-- Billing Modal -->
+        <div id="modal-billing" class="modal" style="display:none;">
+            <h2>My Subscription</h2>
+            <div id="billing-content">
+                <div id="billing-loading">Loading...</div>
+                <div id="billing-info" style="display:none;">
+                    <div class="billing-row"><span>Plan</span><strong id="billing-plan"></strong></div>
+                    <div class="billing-row"><span>Status</span><strong id="billing-status"></strong></div>
+                    <div class="billing-row" id="billing-trial-row" style="display:none;"><span>Trial ends</span><strong id="billing-trial-end"></strong></div>
+                    <div class="billing-row" id="billing-period-row" style="display:none;"><span>Period ends</span><strong id="billing-period-end"></strong></div>
+                    <div class="billing-actions">
+                        <button class="btn-primary" onclick="SiteUI.openBillingPortal()">Manage in Stripe</button>
+                        <button class="btn-outline btn-danger" onclick="SiteUI.cancelSubscription()">Cancel Subscription</button>
+                    </div>
+                </div>
+                <div id="billing-free" style="display:none;">
+                    <p>You are on the <strong>Free</strong> plan.</p>
+                    <button class="btn-primary btn-full" onclick="SiteUI.showPlans()">View Plans</button>
+                </div>
+            </div>
+            <button class="modal-close" onclick="SiteUI.closeModal()">&times;</button>
+        </div>
+
+        <!-- Multiplayer Lobby Modal -->
+        <div id="modal-lobby" class="modal modal-wide" style="display:none;">
+            <h2>Multiplayer Lobby</h2>
+            <div id="lobby-content">
+                <!-- Lobby List View -->
+                <div id="lobby-list">
+                    <div class="lobby-actions">
+                        <select id="lobby-game-filter" onchange="LobbyUI.refresh()">
+                            <option value="">All Games</option>
+                        </select>
+                        <button class="btn-primary" onclick="LobbyUI.showCreate()">Create Room</button>
+                        <button class="btn-outline" onclick="LobbyUI.refresh()">Refresh</button>
+                    </div>
+                    <div id="lobby-rooms" class="lobby-rooms">
+                        <p class="lobby-empty">No rooms available. Create one or use Quick Match!</p>
+                    </div>
+                </div>
+
+                <!-- Create Room View -->
+                <div id="lobby-create" style="display:none;">
+                    <form onsubmit="LobbyUI.handleCreate(event)">
+                        <label>Game</label>
+                        <select id="create-game" required></select>
+                        <label>Room Name</label>
+                        <input type="text" id="create-name" placeholder="My Game Room" maxlength="40">
+                        <label>Max Players</label>
+                        <select id="create-max">
+                            <option value="2">2 Players</option>
+                            <option value="3">3 Players</option>
+                            <option value="4">4 Players</option>
+                        </select>
+                        <label><input type="checkbox" id="create-private"> Private Room</label>
+                        <div class="lobby-form-actions">
+                            <button type="button" class="btn-outline" onclick="LobbyUI.showList()">Back</button>
+                            <button type="submit" class="btn-primary">Create Room</button>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- Room / Waiting View -->
+                <div id="lobby-room" style="display:none;">
+                    <div class="room-header">
+                        <h3 id="room-name"></h3>
+                        <span id="room-game" class="room-game-badge"></span>
+                    </div>
+                    <div id="room-players" class="room-players"></div>
+                    <div id="room-chat" class="room-chat">
+                        <div id="room-chat-messages" class="room-chat-messages"></div>
+                        <div class="room-chat-input">
+                            <input type="text" id="room-chat-text" placeholder="Type a message..." maxlength="500" onkeydown="if(event.key==='Enter')LobbyUI.sendChat()">
+                            <button class="btn-primary btn-sm" onclick="LobbyUI.sendChat()">Send</button>
+                        </div>
+                    </div>
+                    <div class="room-actions">
+                        <button class="btn-outline" onclick="LobbyUI.leave()">Leave Room</button>
+                        <button id="room-ready-btn" class="btn-primary" onclick="LobbyUI.toggleReady()">Ready</button>
+                        <button id="room-start-btn" class="btn-primary" onclick="LobbyUI.startGame()" style="display:none;">Start Game</button>
+                    </div>
+                </div>
+            </div>
+            <button class="modal-close" onclick="SiteUI.closeModal()">&times;</button>
+        </div>
+
+        <!-- Admin: Game Management Modal -->
+        <div id="modal-admin-games" class="modal modal-wide" style="display:none;">
+            <h2>Game Management</h2>
+
+            <!-- Game List View -->
+            <div id="admin-games-list">
+                <div class="ag-actions">
+                    <button class="btn-primary" onclick="AdminGames.showAddForm()">Add Game</button>
+                </div>
+                <div id="admin-games-table">
+                    <p class="admin-games-empty">Loading...</p>
+                </div>
+            </div>
+
+            <!-- Add/Edit Form View -->
+            <div id="admin-games-form" style="display:none;">
+                <h3 id="admin-games-form-title">Add New Game</h3>
+                <form onsubmit="AdminGames.handleSubmit(event)">
+                    <div class="ag-form-row">
+                        <div class="ag-form-col">
+                            <label for="ag-id">Game ID</label>
+                            <input type="text" id="ag-id" placeholder="MyNewGame" required maxlength="61" pattern="[a-zA-Z][a-zA-Z0-9_\-]{1,60}">
+                        </div>
+                        <div class="ag-form-col">
+                            <label for="ag-title">Title</label>
+                            <input type="text" id="ag-title" placeholder="My New Game" required maxlength="80">
+                        </div>
+                    </div>
+                    <div class="ag-form-row">
+                        <div class="ag-form-col">
+                            <label for="ag-classic">Classic Reference</label>
+                            <input type="text" id="ag-classic" placeholder="e.g. Snake" maxlength="60">
+                        </div>
+                        <div class="ag-form-col">
+                            <label for="ag-character">Character ID</label>
+                            <input type="text" id="ag-character" placeholder="e.g. guha, nadia" maxlength="40">
+                        </div>
+                    </div>
+                    <div class="ag-form-row">
+                        <div class="ag-form-col">
+                            <label for="ag-mechanic">Mechanic Description</label>
+                            <input type="text" id="ag-mechanic" placeholder="Short description" maxlength="120">
+                        </div>
+                        <div class="ag-form-col ag-form-col-sm">
+                            <label for="ag-icon-color">Icon Color</label>
+                            <input type="color" id="ag-icon-color" value="#333333">
+                        </div>
+                        <div class="ag-form-col ag-form-col-sm">
+                            <label for="ag-icon-emoji">Icon Emoji</label>
+                            <input type="text" id="ag-icon-emoji" placeholder="?" maxlength="4">
+                        </div>
+                        <div class="ag-form-col ag-form-col-sm">
+                            <label for="ag-sort-order">Sort Order</label>
+                            <input type="number" id="ag-sort-order" value="100" min="0" max="999">
+                        </div>
+                    </div>
+                    <label for="ag-scene-code">Scene Code (Phaser.Scene class)</label>
+                    <textarea id="ag-scene-code" rows="12" placeholder="Return a Phaser.Scene subclass. Example:&#10;&#10;class MyGame extends Phaser.Scene {&#10;  constructor() { super({ key: 'MyGame' }); }&#10;  create() { /* ... */ }&#10;}&#10;return MyGame;" required></textarea>
+                    <div id="ag-form-error" class="form-error"></div>
+                    <div class="ag-form-actions">
+                        <button type="button" class="btn-outline" onclick="AdminGames.backToList()">Cancel</button>
+                        <button type="submit" class="btn-primary">Save Game</button>
+                    </div>
+                </form>
+            </div>
+
+            <button class="modal-close" onclick="SiteUI.closeModal()">&times;</button>
+        </div>
     </div>
 
     <!-- Phaser 3 via CDN -->
@@ -31,6 +294,7 @@
     <script src="js/engine/GameRegistry.js"></script>
     <script src="js/engine/SaveManager.js"></script>
     <script src="js/engine/CloudSyncAPI.js"></script>
+    <script src="js/engine/MultiplayerClient.js"></script>
     <script src="js/engine/BootScene.js"></script>
     <script src="js/engine/Launcher.js"></script>
 
@@ -60,5 +324,10 @@
     <script src="js/games/RobotRepairBay.js"></script>
     <script src="js/games/ParkourLab.js"></script>
     <script src="js/games/STEMCelebration.js"></script>
+
+    <!-- Site UI: Auth, Billing, Profile -->
+    <script src="js/site-ui.js"></script>
+    <script src="js/lobby-ui.js"></script>
+    <script src="js/admin-games.js"></script>
 </body>
 </html>

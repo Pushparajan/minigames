@@ -13,8 +13,12 @@ const Launcher = (() => {
     /**
      * Initialize the launcher UI.
      */
-    function init() {
+    async function init() {
         SaveManager.init();
+
+        // Load admin-added custom games before building the grid
+        await GameRegistry.loadCustomGames().catch(() => {});
+
         _buildGrid();
         _bindBackButton();
 

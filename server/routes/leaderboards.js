@@ -3,11 +3,17 @@
  * ===================
  * Sharded leaderboard system designed for 1M+ players.
  * Uses Redis sorted sets with shard merging for queries.
+ * Extended with season-aware, regional, and multiplayer rankings.
  *
  * GET /leaderboards/:gameId          - Global leaderboard for a game
  * GET /leaderboards/:gameId/me       - Current player's rank
  * GET /leaderboards/:gameId/around   - Nearby ranks around player
+ * GET /leaderboards/:gameId/friends  - Friend leaderboard
+ * GET /leaderboards/:gameId/ranked   - Season/region multiplayer leaderboard
  * GET /leaderboards/global           - Aggregate across all games
+ * GET /leaderboards/seasons          - List all seasons
+ * GET /leaderboards/seasons/current  - Current active season
+ * POST /leaderboards/submit-match    - Submit multiplayer match result
  */
 
 const express = require('express');
@@ -251,6 +257,256 @@ router.get('/global', async (req, res, next) => {
 
         await cache.set(cacheKey, response, config.leaderboard.cacheSeconds);
         res.json(response);
+    } catch (err) {
+        next(err);
+    }
+});
+
+// =========================================
+// Friend Leaderboard
+// =========================================
+
+router.get('/:gameId/friends', async (req, res, next) => {
+    try {
+        if (!req.player) {
+            return res.status(401).json({ error: 'Authentication required' });
+        }
+
+        const { gameId } = req.params;
+        const playerId = req.player.id;
+        const tenantId = req.player.tenantId;
+
+        const result = await db.query(`
+            SELECT gp.player_id, gp.high_score, gp.stars, gp.level, gp.play_count,
+                   p.display_name, p.avatar_character,
+                   RANK() OVER (ORDER BY gp.high_score DESC) as rank
+            FROM game_progress gp
+            JOIN players p ON p.id = gp.player_id AND p.tenant_id = gp.tenant_id
+            WHERE gp.tenant_id = $1 AND gp.game_id = $2 AND gp.high_score > 0
+                AND (gp.player_id = $3 OR gp.player_id IN (
+                    SELECT CASE WHEN f.player_id = $3 THEN f.friend_id ELSE f.player_id END
+                    FROM friendships f
+                    WHERE f.tenant_id = $1 AND f.status = 'accepted'
+                        AND (f.player_id = $3 OR f.friend_id = $3)
+                ))
+            ORDER BY gp.high_score DESC
+            LIMIT 50
+        `, [tenantId, gameId, playerId]);
+
+        res.json({
+            gameId,
+            entries: result.rows.map(row => ({
+                rank: parseInt(row.rank, 10),
+                playerId: row.player_id,
+                displayName: row.display_name,
+                avatarCharacter: row.avatar_character,
+                highScore: parseInt(row.high_score, 10),
+                stars: row.stars,
+                isCurrentPlayer: row.player_id === playerId
+            }))
+        });
+    } catch (err) {
+        next(err);
+    }
+});
+
+// =========================================
+// Ranked / Season Multiplayer Leaderboard
+// =========================================
+
+router.get('/:gameId/ranked', async (req, res, next) => {
+    try {
+        const { gameId } = req.params;
+        const tenantId = req.player?.tenantId || req.tenantId || 'stem_default';
+        const region = req.query.region || 'global';
+        const limit = Math.min(parseInt(req.query.limit, 10) || 50, 100);
+        const offset = parseInt(req.query.offset, 10) || 0;
+
+        // Get current season
+        const activeSeason = await db.query(
+            'SELECT id, name FROM seasons WHERE tenant_id = $1 AND is_active = TRUE ORDER BY starts_at DESC LIMIT 1',
+            [tenantId]
+        );
+        const seasonId = activeSeason.rows[0]?.id || null;
+
+        const cacheKey = `lb_ranked:${tenantId}:${gameId}:${region}:${seasonId}:${offset}:${limit}`;
+        const cached = await cache.get(cacheKey);
+        if (cached) return res.json(cached);
+
+        let query, params;
+        if (seasonId) {
+            query = `
+                SELECT le.player_id, le.score, le.wins, le.losses, le.draws,
+                       le.matches_played, le.skill_rating,
+                       p.display_name, p.avatar_character,
+                       ROW_NUMBER() OVER (ORDER BY le.skill_rating DESC, le.score DESC) as rank
+                FROM leaderboard_entries le
+                JOIN players p ON p.id = le.player_id AND p.tenant_id = le.tenant_id
+                WHERE le.tenant_id = $1 AND le.game_id = $2
+                    AND le.region = $3 AND le.season_id = $4
+                ORDER BY le.skill_rating DESC, le.score DESC
+                LIMIT $5 OFFSET $6
+            `;
+            params = [tenantId, gameId, region, seasonId, limit, offset];
+        } else {
+            query = `
+                SELECT le.player_id, le.score, le.wins, le.losses, le.draws,
+                       le.matches_played, le.skill_rating,
+                       p.display_name, p.avatar_character,
+                       ROW_NUMBER() OVER (ORDER BY le.skill_rating DESC, le.score DESC) as rank
+                FROM leaderboard_entries le
+                JOIN players p ON p.id = le.player_id AND p.tenant_id = le.tenant_id
+                WHERE le.tenant_id = $1 AND le.game_id = $2
+                    AND le.region = $3 AND le.season_id IS NULL
+                ORDER BY le.skill_rating DESC, le.score DESC
+                LIMIT $4 OFFSET $5
+            `;
+            params = [tenantId, gameId, region, limit, offset];
+        }
+
+        const result = await db.query(query, params);
+
+        const response = {
+            gameId,
+            region,
+            seasonId,
+            seasonName: activeSeason.rows[0]?.name || null,
+            offset,
+            limit,
+            entries: result.rows.map(row => ({
+                rank: parseInt(row.rank, 10),
+                playerId: row.player_id,
+                displayName: row.display_name,
+                avatarCharacter: row.avatar_character,
+                score: parseInt(row.score, 10),
+                skillRating: row.skill_rating,
+                wins: row.wins,
+                losses: row.losses,
+                draws: row.draws,
+                matchesPlayed: row.matches_played
+            }))
+        };
+
+        await cache.set(cacheKey, response, 15); // shorter cache for ranked
+        res.json(response);
+    } catch (err) {
+        next(err);
+    }
+});
+
+// =========================================
+// Seasons
+// =========================================
+
+router.get('/seasons', async (req, res, next) => {
+    try {
+        const tenantId = req.player?.tenantId || req.tenantId || 'stem_default';
+        const result = await db.query(
+            'SELECT * FROM seasons WHERE tenant_id = $1 ORDER BY starts_at DESC LIMIT 20',
+            [tenantId]
+        );
+        res.json({ seasons: result.rows });
+    } catch (err) {
+        next(err);
+    }
+});
+
+router.get('/seasons/current', async (req, res, next) => {
+    try {
+        const tenantId = req.player?.tenantId || req.tenantId || 'stem_default';
+        const result = await db.query(
+            'SELECT * FROM seasons WHERE tenant_id = $1 AND is_active = TRUE ORDER BY starts_at DESC LIMIT 1',
+            [tenantId]
+        );
+        res.json({ season: result.rows[0] || null });
+    } catch (err) {
+        next(err);
+    }
+});
+
+// =========================================
+// Submit Multiplayer Match Result
+// =========================================
+
+router.post('/submit-match', async (req, res, next) => {
+    try {
+        if (!req.player) {
+            return res.status(401).json({ error: 'Authentication required' });
+        }
+
+        const tenantId = req.player.tenantId;
+        const { gameId, matchId, results, ratingChanges } = req.body;
+
+        if (!gameId || !results || !Array.isArray(results)) {
+            return res.status(400).json({ error: 'gameId and results array required' });
+        }
+
+        // Get current season
+        const activeSeason = await db.query(
+            'SELECT id FROM seasons WHERE tenant_id = $1 AND is_active = TRUE LIMIT 1',
+            [tenantId]
+        );
+        const seasonId = activeSeason.rows[0]?.id || null;
+
+        for (const result of results) {
+            const isWin = result.isWinner;
+            const isLoss = !isWin && results.length > 1;
+            const isDraw = !isWin && results.filter(r => r.placement === result.placement).length > 1;
+            const newRating = ratingChanges?.[result.id]?.newRating || null;
+
+            // Upsert global leaderboard entry
+            await db.query(`
+                INSERT INTO leaderboard_entries
+                    (tenant_id, player_id, game_id, season_id, region, score, wins, losses, draws, matches_played, skill_rating)
+                VALUES ($1, $2, $3, $4, 'global', $5, $6, $7, $8, 1, COALESCE($9, 1000))
+                ON CONFLICT (tenant_id, player_id, game_id, season_id, region)
+                DO UPDATE SET
+                    score = leaderboard_entries.score + EXCLUDED.score,
+                    wins = leaderboard_entries.wins + EXCLUDED.wins,
+                    losses = leaderboard_entries.losses + EXCLUDED.losses,
+                    draws = leaderboard_entries.draws + EXCLUDED.draws,
+                    matches_played = leaderboard_entries.matches_played + 1,
+                    skill_rating = COALESCE($9, leaderboard_entries.skill_rating),
+                    updated_at = NOW()
+            `, [tenantId, result.id, gameId, seasonId,
+                result.score || 0, isWin ? 1 : 0, isLoss ? 1 : 0, isDraw ? 1 : 0,
+                newRating]);
+
+            // Upsert regional entry
+            const playerRegion = await db.query(
+                'SELECT region FROM players WHERE id = $1 AND tenant_id = $2',
+                [result.id, tenantId]
+            );
+            const region = playerRegion.rows[0]?.region || 'us-east';
+
+            await db.query(`
+                INSERT INTO leaderboard_entries
+                    (tenant_id, player_id, game_id, season_id, region, score, wins, losses, draws, matches_played, skill_rating)
+                VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, 1, COALESCE($10, 1000))
+                ON CONFLICT (tenant_id, player_id, game_id, season_id, region)
+                DO UPDATE SET
+                    score = leaderboard_entries.score + EXCLUDED.score,
+                    wins = leaderboard_entries.wins + EXCLUDED.wins,
+                    losses = leaderboard_entries.losses + EXCLUDED.losses,
+                    draws = leaderboard_entries.draws + EXCLUDED.draws,
+                    matches_played = leaderboard_entries.matches_played + 1,
+                    skill_rating = COALESCE($10, leaderboard_entries.skill_rating),
+                    updated_at = NOW()
+            `, [tenantId, result.id, gameId, seasonId, region,
+                result.score || 0, isWin ? 1 : 0, isLoss ? 1 : 0, isDraw ? 1 : 0,
+                newRating]);
+
+            // Update player aggregate stats
+            await db.query(`
+                UPDATE players SET
+                    mp_wins = mp_wins + $1, mp_losses = mp_losses + $2,
+                    mp_draws = mp_draws + $3, mp_matches = mp_matches + 1,
+                    skill_rating = COALESCE($4, skill_rating)
+                WHERE id = $5 AND tenant_id = $6
+            `, [isWin ? 1 : 0, isLoss ? 1 : 0, isDraw ? 1 : 0, newRating, result.id, tenantId]);
+        }
+
+        res.json({ message: 'Match results submitted', seasonId });
     } catch (err) {
         next(err);
     }

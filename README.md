@@ -49,6 +49,9 @@ Connect to your PostgreSQL database and run the migrations in order:
 psql $DATABASE_URL -f db/migrations/001_initial_schema.sql
 psql $DATABASE_URL -f db/migrations/002_subscriptions_billing.sql
 psql $DATABASE_URL -f db/migrations/003_comments_reviews_moderation.sql
+psql $DATABASE_URL -f db/migrations/004_multiplayer.sql
+psql $DATABASE_URL -f db/migrations/005_custom_games.sql
+psql $DATABASE_URL -f db/migrations/006_multiplayer_tech_stack.sql
 ```
 
 ### 3. Configure environment variables
@@ -148,6 +151,12 @@ Update the `STRIPE_WEBHOOK_SECRET` environment variable with the signing secret 
 
 The Express app uses lazy initialization for database and Redis connections, so cold starts only connect on the first request. Connections persist across warm function invocations.
 
+### Multiplayer (WebSocket server)
+
+The multiplayer system uses WebSockets for real-time game communication. In local development, the WebSocket server attaches automatically to the Express HTTP server on `/ws`.
+
+For production, WebSockets require a persistent server (not serverless). Deploy the server to a platform that supports long-lived connections (e.g. Railway, Fly.io, Render, or a VPS) and point the `WS_URL` environment variable to it. The Vercel deployment handles the REST API and static frontend; the WebSocket server runs separately.
+
 ## Local Development
 
 ```bash
@@ -180,3 +189,29 @@ npm test
 | `GET /api/v1/comments/:gameId` | Get comments for a game |
 | `POST /api/v1/comments/:gameId` | Post a comment |
 | `GET /api/v1/admin/dashboard` | Admin dashboard stats |
+| **Multiplayer** | |
+| `POST /api/v1/multiplayer/rooms` | Create a game room |
+| `GET /api/v1/multiplayer/rooms` | List open rooms |
+| `POST /api/v1/multiplayer/matchmake` | Quick matchmaking |
+| `WS /ws` | Real-time game WebSocket |
+| **Friends** | |
+| `GET /api/v1/friends` | List friends |
+| `POST /api/v1/friends/request` | Send friend request |
+| `GET /api/v1/friends/online` | Online friends |
+| `GET /api/v1/friends/search` | Search players |
+| **Economy** | |
+| `GET /api/v1/economy/wallet` | Get wallet balances |
+| `GET /api/v1/economy/store` | List store items |
+| `POST /api/v1/economy/store/purchase` | Purchase item |
+| `GET /api/v1/economy/battlepass/progress` | Battle pass progress |
+| **Leaderboards** | |
+| `GET /api/v1/leaderboards/:gameId/ranked` | Season ranked leaderboard |
+| `GET /api/v1/leaderboards/:gameId/friends` | Friend leaderboard |
+| `GET /api/v1/leaderboards/seasons/current` | Current season info |
+| **Compliance** | |
+| `POST /api/v1/compliance/export` | GDPR data export |
+| `POST /api/v1/compliance/delete` | GDPR data deletion |
+| `GET /api/v1/compliance/privacy-policy` | Privacy policy |
+| **Monitoring** | |
+| `GET /api/v1/health` | Health check |
+| `GET /api/v1/metrics` | Prometheus/JSON metrics |

@@ -45,5 +45,41 @@ const GameRegistry = (() => {
         return _games.find(g => g.id === id) || null;
     }
 
-    return { register, getAll, getById };
+    /**
+     * Load custom (admin-added) games from the API and register them.
+     * Each custom game's sceneCode is evaluated to produce a Phaser Scene class.
+     */
+    async function loadCustomGames() {
+        try {
+            const res = await fetch('/api/v1/games/custom');
+            if (!res.ok) return;
+            const data = await res.json();
+            if (!data.games || data.games.length === 0) return;
+
+            data.games.forEach(g => {
+                if (_games.find(existing => existing.id === g.id)) return;
+                try {
+                    // Evaluate the scene code to get a Phaser.Scene class
+                    const SceneClass = new Function('Phaser', 'Launcher', 'CharacterFactory', g.scene_code)(Phaser, typeof Launcher !== 'undefined' ? Launcher : null, typeof CharacterFactory !== 'undefined' ? CharacterFactory : null);
+                    register({
+                        id: g.id,
+                        title: g.title,
+                        classic: g.classic || '',
+                        character: g.character_id || '',
+                        mechanic: g.mechanic || '',
+                        iconColor: g.icon_color || '#333',
+                        iconEmoji: g.icon_emoji || '?',
+                        scene: SceneClass,
+                        isCustom: true
+                    });
+                } catch (err) {
+                    console.warn(`GameRegistry: Failed to load custom game "${g.id}":`, err);
+                }
+            });
+        } catch (err) {
+            console.warn('GameRegistry: Could not fetch custom games:', err);
+        }
+    }
+
+    return { register, getAll, getById, loadCustomGames };
 })();

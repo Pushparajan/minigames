@@ -24,6 +24,17 @@ const syncRoutes = require('./routes/sync');
 const billingRoutes = require('./routes/billing');
 const organisationRoutes = require('./routes/organisations');
 const webhookRoutes = require('./routes/webhooks');
+const commentRoutes = require('./routes/comments');
+const adminRoutes = require('./routes/admin');
+const multiplayerRoutes = require('./routes/multiplayer');
+const adminGameRoutes = require('./routes/adminGames');
+const friendRoutes = require('./routes/friends');
+const economyRoutes = require('./routes/economy');
+const presenceRoutes = require('./routes/presence');
+const complianceRoutes = require('./routes/compliance');
+const wsServer = require('./multiplayer/wsServer');
+const { requestTracker, metricsEndpoint, healthEndpoint } = require('./middleware/monitoring');
+const { localeDetector } = require('./middleware/localization');
 
 const db = require('./models/db');
 const cache = require('./services/cache');
@@ -69,22 +80,15 @@ app.use('/api/v1/webhooks', tenantResolver, webhookRoutes);
 app.use(express.json({ limit: '1mb' }));
 app.use(rateLimiter);
 app.use(tenantResolver);
+app.use(requestTracker);
+app.use(localeDetector);
 
 // =========================================
 // Health Check
 // =========================================
 
-app.get('/api/v1/health', async (req, res) => {
-    const dbHealthy = await db.healthCheck();
-    const cacheHealthy = await cache.healthCheck();
-    res.json({
-        status: dbHealthy && cacheHealthy ? 'ok' : 'degraded',
-        db: dbHealthy ? 'ok' : 'error',
-        cache: cacheHealthy ? 'ok' : 'error',
-        uptime: process.uptime(),
-        timestamp: Date.now()
-    });
-});
+app.get('/api/v1/health', healthEndpoint);
+app.get('/api/v1/metrics', metricsEndpoint);
 
 // =========================================
 // Routes
@@ -97,6 +101,15 @@ app.use('/api/v1/player', authenticate, playerRoutes);
 app.use('/api/v1/sync', authenticate, syncRoutes);
 app.use('/api/v1/billing', authenticate, billingRoutes);
 app.use('/api/v1/organisations', authenticate, organisationRoutes);
+app.use('/api/v1/comments', commentRoutes);
+app.use('/api/v1/admin', authenticate, adminRoutes);
+app.use('/api/v1/multiplayer', authenticate, multiplayerRoutes);
+app.use('/api/v1/admin/games', adminGameRoutes);
+app.use('/api/v1/games', adminGameRoutes);
+app.use('/api/v1/friends', authenticate, friendRoutes);
+app.use('/api/v1/economy', authenticate, economyRoutes);
+app.use('/api/v1/presence', authenticate, presenceRoutes);
+app.use('/api/v1/compliance', authenticate, complianceRoutes);
 
 // =========================================
 // Error Handling
@@ -112,8 +125,12 @@ if (require.main === module) {
     (async () => {
         try {
             await ensureConnections();
-            app.listen(config.port, () => {
+            const http = require('http');
+            const server = http.createServer(app);
+            wsServer.attach(server);
+            server.listen(config.port, () => {
                 console.log(`STEM Adventures API running on port ${config.port} [${config.nodeEnv}]`);
+                console.log(`Multiplayer WebSocket server on ws://localhost:${config.port}/ws`);
             });
         } catch (err) {
             console.error('Failed to start server:', err);
