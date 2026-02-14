@@ -33,11 +33,24 @@ const { WebSocketServer } = require('ws');
 const jwt = require('jsonwebtoken');
 const config = require('../config');
 const rooms = require('./RoomManager');
+const { MatchmakingService } = require('./MatchmakingService');
+const { AuthoritativeServer } = require('./AuthoritativeServer');
+const { AntiCheatService } = require('./AntiCheatService');
+const monitoring = require('../middleware/monitoring');
 
 let _wss = null;
 
 /** Map of playerId → ws connection */
 const _connections = new Map();
+
+/** Active authoritative game servers: roomId → AuthoritativeServer */
+const _gameServers = new Map();
+
+/** Matchmaking service singleton */
+const matchmaking = new MatchmakingService();
+
+/** Anti-cheat service singleton */
+const antiCheat = new AntiCheatService();
 
 /**
  * Attach the WebSocket server to an HTTP server.
@@ -53,8 +66,62 @@ function attach(httpServer) {
         _handleConnection(ws, req);
     });
 
+    // Start matchmaking service
+    matchmaking.start((matchData) => {
+        _onMatchFound(matchData);
+    });
+
+    // Update monitoring metrics every 5s
+    setInterval(() => {
+        monitoring.setWsConnections(_connections.size);
+        monitoring.setCcu(_connections.size);
+        monitoring.setActiveRooms(rooms.listRooms({}).length || 0);
+        monitoring.setMatchmakingQueue(matchmaking.getStats().totalQueued);
+    }, 5000);
+
     console.log('Multiplayer WebSocket server attached on /ws');
     return _wss;
+}
+
+/**
+ * Handle a match found from the matchmaking service.
+ */
+function _onMatchFound(matchData) {
+    // Create a room for the matched players
+    const hostPlayer = matchData.players[0];
+    const room = rooms.createRoom(hostPlayer, {
+        gameId: matchData.gameId,
+        name: `Ranked ${matchData.gameId}`,
+        maxPlayers: matchData.players.length,
+        isPrivate: true
+    });
+
+    if (!room || room.error) return;
+
+    // Join all players to the room
+    for (let i = 1; i < matchData.players.length; i++) {
+        rooms.joinRoom(room.room.id, matchData.players[i]);
+    }
+
+    // Notify all matched players
+    for (const player of matchData.players) {
+        const ws = _connections.get(player.id);
+        if (ws && ws.readyState === 1) {
+            rooms.setPlayerWs(room.room.id, player.id, ws);
+            ws._roomId = room.room.id;
+            ws.send(JSON.stringify({
+                type: 'match_found',
+                matchId: matchData.matchId,
+                room: rooms.getRoom(room.room.id),
+                players: matchData.players.map(p => ({
+                    id: p.id,
+                    displayName: p.displayName,
+                    skillRating: p.skillRating,
+                    region: p.region
+                }))
+            }));
+        }
+    }
 }
 
 /**
@@ -146,8 +213,18 @@ function _handleMessage(ws, player, msg) {
         case 'chat':
             _onChat(ws, player, msg);
             break;
+        case 'queue_ranked':
+            _onQueueRanked(ws, player, msg);
+            break;
+        case 'cancel_queue':
+            matchmaking.dequeue(player.id);
+            ws.send(JSON.stringify({ type: 'queue_cancelled' }));
+            break;
+        case 'friend_invite':
+            _onFriendInvite(ws, player, msg);
+            break;
         case 'ping':
-            ws.send(JSON.stringify({ type: 'pong', ts: Date.now() }));
+            ws.send(JSON.stringify({ type: 'pong', serverTime: Date.now() }));
             break;
         default:
             ws.send(JSON.stringify({ type: 'error', message: `Unknown message type: ${msg.type}` }));
@@ -265,11 +342,70 @@ function _onChat(ws, player, msg) {
 }
 
 // =========================================
+// Ranked Matchmaking
+// =========================================
+
+function _onQueueRanked(ws, player, msg) {
+    if (!msg.gameId) {
+        ws.send(JSON.stringify({ type: 'error', message: 'gameId required for matchmaking' }));
+        return;
+    }
+
+    const result = matchmaking.enqueue(
+        {
+            id: player.id,
+            displayName: player.displayName,
+            skillRating: msg.skillRating || 1000,
+            skillDeviation: msg.skillDeviation || 350,
+            region: msg.region || 'us-east',
+            ws
+        },
+        msg.gameId,
+        { mode: msg.mode || 'ranked', maxPlayers: msg.maxPlayers || 2 }
+    );
+
+    if (result.queued) {
+        ws.send(JSON.stringify({
+            type: 'queue_joined',
+            gameId: msg.gameId,
+            estimatedWait: result.estimatedWait,
+            position: result.queuePosition
+        }));
+    } else {
+        ws.send(JSON.stringify({ type: 'error', message: result.reason || 'Failed to join queue' }));
+    }
+}
+
+// =========================================
+// Friend Invites
+// =========================================
+
+function _onFriendInvite(ws, player, msg) {
+    const targetId = msg.friendId;
+    if (!targetId || !msg.roomId) return;
+
+    const targetWs = _connections.get(targetId);
+    if (targetWs && targetWs.readyState === 1) {
+        targetWs.send(JSON.stringify({
+            type: 'friend_invite',
+            from: { id: player.id, displayName: player.displayName },
+            roomId: msg.roomId,
+            gameId: msg.gameId || null
+        }));
+        ws.send(JSON.stringify({ type: 'invite_sent', to: targetId }));
+    } else {
+        ws.send(JSON.stringify({ type: 'error', message: 'Player is offline' }));
+    }
+}
+
+// =========================================
 // Disconnect Handling
 // =========================================
 
 function _handleDisconnect(player) {
     _connections.delete(player.id);
+    matchmaking.dequeue(player.id);
+    antiCheat.untrackPlayer(player.id);
 
     const room = rooms.getPlayerRoom(player.id);
     if (room) {
@@ -306,10 +442,15 @@ const _heartbeatInterval = setInterval(() => {
  */
 function close() {
     clearInterval(_heartbeatInterval);
+    matchmaking.stop();
+    for (const server of _gameServers.values()) {
+        server.destroy();
+    }
+    _gameServers.clear();
     if (_wss) {
         _wss.clients.forEach(ws => ws.close());
         _wss.close();
     }
 }
 
-module.exports = { attach, close };
+module.exports = { attach, close, matchmaking };
