@@ -25,8 +25,10 @@ class AeroEngineering extends Phaser.Scene {
         this.enemyTimer = 0;
         this.cloudScrollX = 0;
 
-        // Graphics
-        this.bgGraphics = this.add.graphics();
+        // Graphics - static sky background drawn once
+        const bgGraphics = this.add.graphics();
+        bgGraphics.fillStyle(0x4A90D9, 1);
+        bgGraphics.fillRect(0, 0, width, height);
         this.cloudGraphics = this.add.graphics().setDepth(1);
         this.enemyGraphics = this.add.graphics().setDepth(3);
         this.bulletGraphics = this.add.graphics().setDepth(4);
@@ -123,11 +125,6 @@ class AeroEngineering extends Phaser.Scene {
         if (this.planeX > width + 20) this.planeX = -20;
         if (this.planeY < -20) this.planeY = height + 20;
         if (this.planeY > height + 20) this.planeY = -20;
-
-        // --- Background ---
-        this.bgGraphics.clear();
-        this.bgGraphics.fillStyle(0x4A90D9, 1);
-        this.bgGraphics.fillRect(0, 0, width, height);
 
         // Clouds
         this.cloudGraphics.clear();
@@ -271,6 +268,12 @@ class AeroEngineering extends Phaser.Scene {
                 color, life: 25
             });
         }
+    }
+
+    shutdown() {
+        this.bullets = [];
+        this.enemies = [];
+        this.particles = [];
     }
 }
 

@@ -227,6 +227,12 @@ class ColorLabQuest extends Phaser.Scene {
         this.playerGraphics.fillCircle(this.playerX - 3, this.playerY - 9, 1);
         this.playerGraphics.fillCircle(this.playerX + 3, this.playerY - 9, 1);
     }
+
+    shutdown() {
+        this.platforms = [];
+        this.collectibles = [];
+        this.colors = [];
+    }
 }
 
 GameRegistry.register({

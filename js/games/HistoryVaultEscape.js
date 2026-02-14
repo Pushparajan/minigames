@@ -282,6 +282,15 @@ class HistoryVaultEscape extends Phaser.Scene {
     }
 
     update() {}
+
+    shutdown() {
+        this.grid = [];
+        this.traps = [];
+        this.switches = [];
+        this.keys = [];
+        this.doors = [];
+        this.blocks = [];
+    }
 }
 
 GameRegistry.register({

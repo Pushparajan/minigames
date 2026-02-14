@@ -327,6 +327,12 @@ class STEMCelebration extends Phaser.Scene {
                 }).setOrigin(0.5).setDepth(20);
         }
     }
+
+    shutdown() {
+        this.notes = [];
+        this.effects = [];
+        this.gameOver = false;
+    }
 }
 
 GameRegistry.register({

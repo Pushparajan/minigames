@@ -252,6 +252,11 @@ class FormulaSTEM extends Phaser.Scene {
         g.closePath();
         g.fillPath();
     }
+
+    shutdown() {
+        this.waypoints = [];
+        this.aiCars = [];
+    }
 }
 
 GameRegistry.register({

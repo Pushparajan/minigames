@@ -255,6 +255,11 @@ class MolecularSplit extends Phaser.Scene {
             this._spawnLevel();
         }
     }
+
+    shutdown() {
+        this.molecules = [];
+        this.harpoon = null;
+    }
 }
 
 GameRegistry.register({

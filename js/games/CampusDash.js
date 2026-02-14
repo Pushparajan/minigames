@@ -174,9 +174,17 @@ class CampusDash extends Phaser.Scene {
             }
         });
 
-        // Score for distance
-        this.score = Math.floor(this.distance * 100);
-        Launcher.updateScore(this.score);
+        // Score for distance (only update DOM when changed)
+        const newScore = Math.floor(this.distance * 100);
+        if (newScore !== this.score) {
+            this.score = newScore;
+            Launcher.updateScore(this.score);
+        }
+    }
+
+    shutdown() {
+        this.obstacles = [];
+        this.roadSegments = [];
     }
 }
 

@@ -85,14 +85,19 @@ class RoverFieldTest extends Phaser.Scene {
     }
 
     _getTerrainYAt(worldX) {
-        // Find the two terrain points bracketing worldX
-        for (let i = 0; i < this.terrainPoints.length - 1; i++) {
-            const p1 = this.terrainPoints[i];
-            const p2 = this.terrainPoints[i + 1];
-            if (worldX >= p1.x && worldX < p2.x) {
-                const t = (worldX - p1.x) / (p2.x - p1.x);
-                return p1.y + (p2.y - p1.y) * t;
-            }
+        // Binary search for the two terrain points bracketing worldX
+        const pts = this.terrainPoints;
+        let lo = 0, hi = pts.length - 2;
+        while (lo < hi) {
+            const mid = (lo + hi) >> 1;
+            if (pts[mid + 1].x <= worldX) lo = mid + 1;
+            else hi = mid;
+        }
+        const p1 = pts[lo];
+        const p2 = pts[lo + 1];
+        if (worldX >= p1.x && worldX < p2.x) {
+            const t = (worldX - p1.x) / (p2.x - p1.x);
+            return p1.y + (p2.y - p1.y) * t;
         }
         return this.scale.height * 0.6;
     }
@@ -122,10 +127,13 @@ class RoverFieldTest extends Phaser.Scene {
 
         // Move rover
         this.scrollX += this.roverVX;
-        this.distance = Math.floor(this.scrollX / 10);
-        this.distText.setText(`Dist: ${this.distance}m`);
-        this.score = this.distance;
-        Launcher.updateScore(this.score);
+        const newDist = Math.floor(this.scrollX / 10);
+        if (newDist !== this.distance) {
+            this.distance = newDist;
+            this.distText.setText(`Dist: ${this.distance}m`);
+            this.score = this.distance;
+            Launcher.updateScore(this.score);
+        }
 
         // Get terrain height at rover position
         const worldRoverX = this.scrollX + this.roverX;
@@ -232,6 +240,11 @@ class RoverFieldTest extends Phaser.Scene {
                     fontFamily: 'sans-serif', fontStyle: 'bold'
                 }).setOrigin(0.5).setDepth(20);
         }
+    }
+
+    shutdown() {
+        this.terrainPoints = [];
+        this.gameOver = false;
     }
 }
 

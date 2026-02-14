@@ -275,6 +275,12 @@ class CableCarConundrum extends Phaser.Scene {
         this.carGraphics.fillStyle(0x333333, 1);
         this.carGraphics.fillCircle(carPos.x, carPos.y, 4);
     }
+
+    shutdown() {
+        this.pathPoints = [];
+        this.obstacles = [];
+        this.collectibles = [];
+    }
 }
 
 GameRegistry.register({

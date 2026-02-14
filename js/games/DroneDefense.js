@@ -205,7 +205,7 @@ class DroneDefense extends Phaser.Scene {
         for (let i = this.enemies.length - 1; i >= 0; i--) {
             const e = this.enemies[i];
             e.x += e.vx;
-            e.y += Math.sin(Date.now() / 500 + i) * 0.5;
+            e.y += Math.sin(this.time.now / 500 + i) * 0.5;
 
             // Off-screen removal
             if (e.x < -50 || e.x > width + 50) {
@@ -279,6 +279,12 @@ class DroneDefense extends Phaser.Scene {
             this.particleGraphics.fillStyle(p.color, p.life / 20);
             this.particleGraphics.fillCircle(p.x, p.y, 2);
         }
+    }
+
+    shutdown() {
+        this.bullets = [];
+        this.enemies = [];
+        this.particles = [];
     }
 }
 

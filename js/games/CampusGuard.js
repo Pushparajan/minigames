@@ -326,6 +326,13 @@ class CampusGuard extends Phaser.Scene {
             this.spawning = true; // Prevent re-trigger
         }
     }
+
+    shutdown() {
+        this.turrets = [];
+        this.enemies = [];
+        this.bullets = [];
+        this.particles = [];
+    }
 }
 
 GameRegistry.register({
