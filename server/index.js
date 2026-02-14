@@ -24,6 +24,8 @@ const syncRoutes = require('./routes/sync');
 const billingRoutes = require('./routes/billing');
 const organisationRoutes = require('./routes/organisations');
 const webhookRoutes = require('./routes/webhooks');
+const commentRoutes = require('./routes/comments');
+const adminRoutes = require('./routes/admin');
 
 const db = require('./models/db');
 const cache = require('./services/cache');
@@ -97,6 +99,8 @@ app.use('/api/v1/player', authenticate, playerRoutes);
 app.use('/api/v1/sync', authenticate, syncRoutes);
 app.use('/api/v1/billing', authenticate, billingRoutes);
 app.use('/api/v1/organisations', authenticate, organisationRoutes);
+app.use('/api/v1/comments', commentRoutes);
+app.use('/api/v1/admin', authenticate, adminRoutes);
 
 // =========================================
 // Error Handling

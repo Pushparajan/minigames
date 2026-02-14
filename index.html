@@ -3,10 +3,32 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>STEM School Adventures</title>
+    <title>STEM School Adventures — minigames.cool</title>
     <link rel="stylesheet" href="css/styles.css">
 </head>
 <body>
+    <!-- Top Navigation Bar -->
+    <nav id="top-nav">
+        <div class="nav-left">
+            <a href="/" class="nav-brand">STEM School Adventures</a>
+        </div>
+        <div class="nav-right">
+            <button id="nav-plans-btn" class="nav-link" onclick="SiteUI.showPlans()">Plans</button>
+            <!-- Logged out state -->
+            <div id="nav-guest" class="nav-auth">
+                <button class="btn-outline" onclick="SiteUI.showLogin()">Log In</button>
+                <button class="btn-primary" onclick="SiteUI.showRegister()">Sign Up</button>
+            </div>
+            <!-- Logged in state -->
+            <div id="nav-user" class="nav-auth" style="display:none;">
+                <button id="nav-billing-btn" class="nav-link" onclick="SiteUI.showBilling()">Billing</button>
+                <span id="nav-username" class="nav-username"></span>
+                <button class="btn-outline btn-sm" onclick="SiteUI.logout()">Log Out</button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Launcher Screen -->
     <div id="launcher">
         <header class="launcher-header">
             <h1>STEM School Adventures</h1>
@@ -14,6 +36,8 @@
         </header>
         <div id="game-grid" class="game-grid"></div>
     </div>
+
+    <!-- Game Container -->
     <div id="game-container" style="display:none;">
         <div id="game-hud">
             <button id="btn-back" class="hud-btn">&larr; Back</button>
@@ -21,6 +45,111 @@
             <span id="hud-score">Score: 0</span>
         </div>
         <div id="phaser-container"></div>
+    </div>
+
+    <!-- Modal Overlay -->
+    <div id="modal-overlay" class="modal-overlay" style="display:none;" onclick="SiteUI.closeModal(event)">
+        <!-- Login Modal -->
+        <div id="modal-login" class="modal" style="display:none;">
+            <h2>Log In</h2>
+            <form onsubmit="SiteUI.handleLogin(event)">
+                <input type="email" id="login-email" placeholder="Email" required autocomplete="email">
+                <input type="password" id="login-password" placeholder="Password" required autocomplete="current-password">
+                <div id="login-error" class="form-error"></div>
+                <button type="submit" class="btn-primary btn-full">Log In</button>
+            </form>
+            <p class="modal-switch">No account? <a href="#" onclick="SiteUI.showRegister(); return false;">Sign up</a></p>
+            <button class="modal-close" onclick="SiteUI.closeModal()">&times;</button>
+        </div>
+
+        <!-- Register Modal -->
+        <div id="modal-register" class="modal" style="display:none;">
+            <h2>Create Account</h2>
+            <form onsubmit="SiteUI.handleRegister(event)">
+                <input type="text" id="reg-name" placeholder="Display Name" required minlength="2" maxlength="30" autocomplete="username">
+                <input type="email" id="reg-email" placeholder="Email" required autocomplete="email">
+                <input type="password" id="reg-password" placeholder="Password (min 8 chars)" required minlength="8" autocomplete="new-password">
+                <div id="reg-error" class="form-error"></div>
+                <button type="submit" class="btn-primary btn-full">Create Account</button>
+            </form>
+            <p class="modal-switch">Have an account? <a href="#" onclick="SiteUI.showLogin(); return false;">Log in</a></p>
+            <button class="modal-close" onclick="SiteUI.closeModal()">&times;</button>
+        </div>
+
+        <!-- Plans Modal -->
+        <div id="modal-plans" class="modal modal-wide" style="display:none;">
+            <h2>Subscription Plans</h2>
+            <div id="plans-grid" class="plans-grid">
+                <div class="plan-card">
+                    <h3>Free</h3>
+                    <div class="plan-price">$0</div>
+                    <ul>
+                        <li>Play all 25 games</li>
+                        <li>Local save progress</li>
+                        <li>View leaderboards</li>
+                    </ul>
+                    <button class="btn-outline btn-full" disabled>Current</button>
+                </div>
+                <div class="plan-card plan-featured">
+                    <span class="plan-badge">Popular</span>
+                    <h3>Starter</h3>
+                    <div class="plan-price">$4.99<span>/mo</span></div>
+                    <ul>
+                        <li>Everything in Free</li>
+                        <li>Cloud sync &amp; backup</li>
+                        <li>Submit to leaderboards</li>
+                        <li>Comments &amp; reviews</li>
+                    </ul>
+                    <button class="btn-primary btn-full" onclick="SiteUI.subscribe('starter')">Subscribe</button>
+                </div>
+                <div class="plan-card">
+                    <h3>Pro</h3>
+                    <div class="plan-price">$9.99<span>/mo</span></div>
+                    <ul>
+                        <li>Everything in Starter</li>
+                        <li>Create organisations</li>
+                        <li>Priority support</li>
+                        <li>Advanced analytics</li>
+                    </ul>
+                    <button class="btn-primary btn-full" onclick="SiteUI.subscribe('pro')">Subscribe</button>
+                </div>
+                <div class="plan-card">
+                    <h3>Enterprise</h3>
+                    <div class="plan-price">$29.99<span>/mo</span></div>
+                    <ul>
+                        <li>Everything in Pro</li>
+                        <li>Unlimited members</li>
+                        <li>Custom branding</li>
+                        <li>Dedicated support</li>
+                    </ul>
+                    <button class="btn-primary btn-full" onclick="SiteUI.subscribe('enterprise')">Subscribe</button>
+                </div>
+            </div>
+            <button class="modal-close" onclick="SiteUI.closeModal()">&times;</button>
+        </div>
+
+        <!-- Billing Modal -->
+        <div id="modal-billing" class="modal" style="display:none;">
+            <h2>My Subscription</h2>
+            <div id="billing-content">
+                <div id="billing-loading">Loading...</div>
+                <div id="billing-info" style="display:none;">
+                    <div class="billing-row"><span>Plan</span><strong id="billing-plan"></strong></div>
+                    <div class="billing-row"><span>Status</span><strong id="billing-status"></strong></div>
+                    <div class="billing-row" id="billing-trial-row" style="display:none;"><span>Trial ends</span><strong id="billing-trial-end"></strong></div>
+                    <div class="billing-row" id="billing-period-row" style="display:none;"><span>Period ends</span><strong id="billing-period-end"></strong></div>
+                    <div class="billing-actions">
+                        <button class="btn-primary" onclick="SiteUI.openBillingPortal()">Manage in Stripe</button>
+                        <button class="btn-outline btn-danger" onclick="SiteUI.cancelSubscription()">Cancel Subscription</button>
+                    </div>
+                </div>
+                <div id="billing-free" style="display:none;">
+                    <p>You are on the <strong>Free</strong> plan.</p>
+                    <button class="btn-primary btn-full" onclick="SiteUI.showPlans()">View Plans</button>
+                </div>
+            </div>
+            <button class="modal-close" onclick="SiteUI.closeModal()">&times;</button>
+        </div>
     </div>
 
     <!-- Phaser 3 via CDN -->
@@ -60,5 +189,8 @@
     <script src="js/games/RobotRepairBay.js"></script>
     <script src="js/games/ParkourLab.js"></script>
     <script src="js/games/STEMCelebration.js"></script>
+
+    <!-- Site UI: Auth, Billing, Profile -->
+    <script src="js/site-ui.js"></script>
 </body>
 </html>
