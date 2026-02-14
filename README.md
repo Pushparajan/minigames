@@ -1,6 +1,8 @@
 # STEM School Adventures
 
-A multi-tenant STEM gaming platform with 25 educational minigames, built with Phaser 3 and an Express.js API backend.
+**[minigames.cool](https://minigames.cool)**
+
+A multi-tenant STEM gaming platform with 25 educational minigames, built with Phaser 3 and an Express.js API backend. Hosted on Vercel with a custom domain on GoDaddy.
 
 ## Project Structure
 
@@ -70,7 +72,7 @@ vercel env add REDIS_PASSWORD
 vercel env add JWT_SECRET
 
 # CORS
-vercel env add CORS_ORIGINS          # e.g. https://your-domain.vercel.app
+vercel env add CORS_ORIGINS          # https://minigames.cool
 
 # Multi-tenancy
 vercel env add DEFAULT_TENANT_ID     # e.g. stem_default
@@ -100,11 +102,27 @@ vercel
 vercel --prod
 ```
 
-### 5. Set up Stripe webhooks
+### 5. Connect custom domain (GoDaddy)
+
+The production domain is **minigames.cool**, registered on [GoDaddy](https://godaddy.com).
+
+1. In the Vercel dashboard go to **Settings > Domains** and add `minigames.cool`.
+2. Vercel will show the required DNS records. In GoDaddy DNS Management:
+
+| Type | Name | Value |
+|---|---|---|
+| A | @ | `76.76.21.21` |
+| CNAME | www | `cname.vercel-dns.com` |
+
+3. Remove any conflicting A or CNAME records for `@` and `www` in GoDaddy.
+4. Wait for DNS propagation (usually a few minutes, up to 48 hours).
+5. Vercel will automatically provision an SSL certificate once DNS resolves.
+
+### 6. Set up Stripe webhooks
 
 After deploying, create a webhook endpoint in the [Stripe Dashboard](https://dashboard.stripe.com/webhooks):
 
-- **Endpoint URL**: `https://your-domain.vercel.app/api/v1/webhooks/stripe`
+- **Endpoint URL**: `https://minigames.cool/api/v1/webhooks/stripe`
 - **Events to listen for**:
   - `customer.subscription.created`
   - `customer.subscription.updated`
@@ -126,6 +144,7 @@ Update the `STRIPE_WEBHOOK_SECRET` environment variable with the signing secret 
 | Function memory | 512 MB |
 | Function timeout | 30 seconds |
 | API route | `/api/v1/*` rewrites to `api/index.js` |
+| Custom domain | `minigames.cool` (GoDaddy DNS → Vercel) |
 
 The Express app uses lazy initialization for database and Redis connections, so cold starts only connect on the first request. Connections persist across warm function invocations.
 
