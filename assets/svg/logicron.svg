@@ -1,5 +1,5 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
-  <!-- Logicron: Floating spherical AI, metallic silver, glowing blue eyes, holographic puzzle symbols -->
+  <!-- Logicron: Silver/gray spherical robot with blue glowing eyes, surrounded by gear/puzzle pieces -->
   <!-- Outer glow -->
   <circle cx="32" cy="32" r="30" fill="none" stroke="#00BCD4" stroke-width="1" opacity="0.3"/>
   <circle cx="32" cy="32" r="28" fill="none" stroke="#2196F3" stroke-width="0.5" opacity="0.2"/>
@@ -25,21 +25,41 @@
   <ellipse cx="40" cy="27" rx="1.5" ry="2" fill="#64B5F6"/>
   <circle cx="25" cy="26" r="1" fill="white" opacity="0.8"/>
   <circle cx="41" cy="26" r="1" fill="white" opacity="0.8"/>
-  <!-- Expressive mouth (subtle digital line) -->
+  <!-- Expressive mouth -->
   <path d="M26,38 Q32,42 38,38" fill="none" stroke="#2196F3" stroke-width="1.5"/>
-  <!-- Orbiting holographic puzzle symbols -->
-  <!-- Puzzle piece (top-right) -->
-  <g transform="translate(50,12) scale(0.6)" opacity="0.6">
+  <!-- Orbiting gear (top-right) -->
+  <g transform="translate(50,8)" opacity="0.6">
+    <circle cx="0" cy="0" r="5" fill="none" stroke="#00BCD4" stroke-width="1.5"/>
+    <circle cx="0" cy="0" r="2" fill="#00BCD4" opacity="0.4"/>
+    <rect x="-1" y="-7" width="2" height="3" rx="0.5" fill="#00BCD4"/>
+    <rect x="-1" y="4" width="2" height="3" rx="0.5" fill="#00BCD4"/>
+    <rect x="-7" y="-1" width="3" height="2" rx="0.5" fill="#00BCD4"/>
+    <rect x="4" y="-1" width="3" height="2" rx="0.5" fill="#00BCD4"/>
+  </g>
+  <!-- Orbiting gear (bottom-left) -->
+  <g transform="translate(8,50)" opacity="0.5">
+    <circle cx="0" cy="0" r="4" fill="none" stroke="#00E5FF" stroke-width="1.2"/>
+    <circle cx="0" cy="0" r="1.5" fill="#00E5FF" opacity="0.4"/>
+    <rect x="-0.8" y="-6" width="1.6" height="2.5" rx="0.4" fill="#00E5FF"/>
+    <rect x="-0.8" y="3.5" width="1.6" height="2.5" rx="0.4" fill="#00E5FF"/>
+    <rect x="-6" y="-0.8" width="2.5" height="1.6" rx="0.4" fill="#00E5FF"/>
+    <rect x="3.5" y="-0.8" width="2.5" height="1.6" rx="0.4" fill="#00E5FF"/>
+  </g>
+  <!-- Puzzle piece (top-left) -->
+  <g transform="translate(6,10) scale(0.6)" opacity="0.5">
     <rect x="0" y="0" width="10" height="10" rx="1" fill="none" stroke="#00BCD4" stroke-width="1.5"/>
     <circle cx="10" cy="5" r="3" fill="#00BCD4" opacity="0.4"/>
   </g>
-  <!-- Triangle (bottom-left) -->
-  <polygon points="8,52 16,44 16,52" fill="none" stroke="#00E5FF" stroke-width="1" opacity="0.5"/>
-  <!-- Circle (top-left) -->
-  <circle cx="10" cy="14" r="4" fill="none" stroke="#00BCD4" stroke-width="1" opacity="0.5"/>
-  <!-- Square (bottom-right) -->
-  <rect x="48" y="46" width="8" height="8" rx="1" fill="none" stroke="#00E5FF" stroke-width="1" opacity="0.5"/>
-  <!-- Floating dots (data particles) -->
+  <!-- Small gear (bottom-right) -->
+  <g transform="translate(54,48)" opacity="0.4">
+    <circle cx="0" cy="0" r="3" fill="none" stroke="#00E5FF" stroke-width="1"/>
+    <circle cx="0" cy="0" r="1" fill="#00E5FF" opacity="0.5"/>
+    <rect x="-0.6" y="-4.5" width="1.2" height="2" rx="0.3" fill="#00E5FF"/>
+    <rect x="-0.6" y="2.5" width="1.2" height="2" rx="0.3" fill="#00E5FF"/>
+    <rect x="-4.5" y="-0.6" width="2" height="1.2" rx="0.3" fill="#00E5FF"/>
+    <rect x="2.5" y="-0.6" width="2" height="1.2" rx="0.3" fill="#00E5FF"/>
+  </g>
+  <!-- Floating data particles -->
   <circle cx="6" cy="32" r="1.5" fill="#00BCD4" opacity="0.6"/>
   <circle cx="58" cy="30" r="1.5" fill="#00BCD4" opacity="0.6"/>
   <circle cx="32" cy="4" r="1" fill="#64B5F6" opacity="0.5"/>

@@ -1,5 +1,5 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 96" width="64" height="96">
-  <!-- Sofia: 11yo girl, short dark hair, tool belt, light blue shirt, goggles on forehead, wrench+blueprint -->
+  <!-- Sofia: Girl, dark hair with goggles on head, light blue shirt, tool belt, holding wrench, surrounded by math symbols -->
   <!-- Boots -->
   <rect x="14" y="84" width="14" height="10" rx="3" fill="#5D4037"/>
   <rect x="36" y="84" width="14" height="10" rx="3" fill="#5D4037"/>
@@ -45,7 +45,7 @@
   <!-- Short bob cut sides -->
   <rect x="15" y="14" width="4" height="10" rx="2" fill="#37474F"/>
   <rect x="45" y="14" width="4" height="10" rx="2" fill="#37474F"/>
-  <!-- Goggles on forehead -->
+  <!-- Goggles on forehead/head -->
   <rect x="20" y="10" width="24" height="6" rx="3" fill="#FF7043" opacity="0.9"/>
   <circle cx="28" cy="13" r="4" fill="none" stroke="#BF360C" stroke-width="1.5"/>
   <circle cx="36" cy="13" r="4" fill="none" stroke="#BF360C" stroke-width="1.5"/>
@@ -69,4 +69,11 @@
   <!-- Ears -->
   <ellipse cx="17" cy="22" rx="2.5" ry="3.5" fill="#E8C4A0"/>
   <ellipse cx="47" cy="22" rx="2.5" ry="3.5" fill="#E8C4A0"/>
+  <!-- Floating math symbols around character -->
+  <text x="0" y="14" font-size="7" fill="#42A5F5" opacity="0.5" font-family="sans-serif">+</text>
+  <text x="56" y="10" font-size="8" fill="#42A5F5" opacity="0.45" font-family="sans-serif">×</text>
+  <text x="58" y="40" font-size="7" fill="#64B5F6" opacity="0.4" font-family="sans-serif">÷</text>
+  <text x="0" y="36" font-size="6" fill="#42A5F5" opacity="0.4" font-family="sans-serif">√</text>
+  <text x="54" y="24" font-size="6" fill="#64B5F6" opacity="0.35" font-family="sans-serif">=</text>
+  <polygon points="2,46 5,42 8,46" fill="none" stroke="#42A5F5" stroke-width="0.8" opacity="0.4"/>
 </svg>

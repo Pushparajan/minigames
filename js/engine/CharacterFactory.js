@@ -49,7 +49,7 @@ const CharacterFactory = (() => {
             bodyWidth: 32,
             bodyHeight: 48,
             icon: 'lightning',
-            description: 'Brave 10yo boy, red hoodie, lightning bolt patterns'
+            description: 'Brave 10yo boy, red hoodie, lightning bolt, magnifying glass, red sneakers'
         },
         nadia: {
             name: 'Nadia',
@@ -60,7 +60,7 @@ const CharacterFactory = (() => {
             bodyWidth: 30,
             bodyHeight: 46,
             icon: 'leaf',
-            description: 'Nature-loving girl, green overalls, curly dark hair'
+            description: 'Nature-loving girl, green overalls, yellow top, curly brown hair, tablet and plant'
         },
         logicron: {
             name: 'Logicron',
@@ -71,7 +71,7 @@ const CharacterFactory = (() => {
             bodyWidth: 36,
             bodyHeight: 36,
             icon: 'puzzle',
-            description: 'Floating spherical AI, silver body, blue digital eyes'
+            description: 'Floating spherical AI, silver body, blue digital eyes, gears and puzzles'
         },
         andres: {
             name: 'Andrés',
@@ -82,18 +82,18 @@ const CharacterFactory = (() => {
             bodyWidth: 36,
             bodyHeight: 52,
             icon: 'beaker',
-            description: 'Cheerful man, lab coat, safety goggles, beaker'
+            description: 'Cheerful man, white lab coat with colorful patches, beard, flask with liquid'
         },
         dev: {
             name: 'Dev',
             role: 'Mathematics',
-            primaryColor: '#FFF8E1',   // Kurta shirt
-            secondaryColor: '#FFD54F', // Golden geometric glow
-            accentColor: '#795548',    // Salt-and-pepper
+            primaryColor: '#FFD54F',   // Gold kurta
+            secondaryColor: '#FFD54F', // Golden glow
+            accentColor: '#9E9E9E',    // Gray hair
             bodyWidth: 34,
             bodyHeight: 50,
             icon: 'geometry',
-            description: 'Wise mentor, kurta shirt, holographic geometry'
+            description: 'Wise mentor, gold kurta, scrolls, floating numbers'
         },
         sofia: {
             name: 'Sofia',
@@ -104,7 +104,7 @@ const CharacterFactory = (() => {
             bodyWidth: 30,
             bodyHeight: 46,
             icon: 'wrench',
-            description: '11yo girl, tool belt, goggles, wrench and blueprint'
+            description: '11yo girl, tool belt, goggles, wrench, math symbols'
         },
         rex: {
             name: 'Rex',
@@ -115,7 +115,7 @@ const CharacterFactory = (() => {
             bodyWidth: 34,
             bodyHeight: 48,
             icon: 'spark',
-            description: 'Quirky inventor, mismatched coat, crooked goggles'
+            description: 'Quirky inventor, wild red hair, goggles, steampunk gadget with smoke'
         },
         maya: {
             name: 'Maya',
@@ -126,29 +126,29 @@ const CharacterFactory = (() => {
             bodyWidth: 28,
             bodyHeight: 42,
             icon: 'globe',
-            description: '9yo girl, braided hair, earth-tone jacket, globe'
+            description: '9yo girl, brown braided hair, earth-tone jacket, crystal/gem and globe'
         },
         zack: {
             name: 'Zack',
             role: 'Computer Science',
-            primaryColor: '#424242',   // Dark hoodie
-            secondaryColor: '#00E676', // Pixel/neon green
-            accentColor: '#76FF03',    // Holographic code
+            primaryColor: '#1565C0',   // Colorful jacket
+            secondaryColor: '#00E676', // Holographic green
+            accentColor: '#6D4C41',    // Brown hair
             bodyWidth: 30,
             bodyHeight: 46,
             icon: 'pixel',
-            description: '10yo boy, pixel-pattern hoodie, holographic code'
+            description: '10yo boy, colorful patterned jacket, laptop with holographic display'
         },
         grandpaVidur: {
             name: 'Grandpa Vidur',
             role: 'History of Science',
-            primaryColor: '#D7CCC8',   // Traditional vest
-            secondaryColor: '#FFE0B2', // Warm skin tone
-            accentColor: '#9E9E9E',    // Silver hair
+            primaryColor: '#7E57C2',   // Colorful vest
+            secondaryColor: '#FFD54F', // Golden book glow
+            accentColor: '#E0E0E0',    // White hair
             bodyWidth: 36,
             bodyHeight: 52,
             icon: 'book',
-            description: 'Elderly man, silver hair, round glasses, ancient book'
+            description: 'Elderly man, white beard, glasses, colorful vest, golden book with sparkles'
         },
         arvi: {
             name: 'Arvi 9000',
@@ -159,7 +159,7 @@ const CharacterFactory = (() => {
             bodyWidth: 28,
             bodyHeight: 32,
             icon: 'antenna',
-            description: 'Small hovering AI, white-blue body, digital face'
+            description: 'Small hovering AI, white body, blue glowing eyes, antenna with signal waves'
         },
         pancho: {
             name: 'Pancho',
@@ -170,7 +170,7 @@ const CharacterFactory = (() => {
             bodyWidth: 30,
             bodyHeight: 46,
             icon: 'music',
-            description: '12yo boy, patchwork hoodie, ukulele, journal'
+            description: '12yo boy, colorful patchwork vest, ukulele, music notes'
         }
     };
 

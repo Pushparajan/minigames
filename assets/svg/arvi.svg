@@ -1,5 +1,5 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 64" width="48" height="64">
-  <!-- Arvi 9000: Small hovering AI, sleek white-blue body, digital face screen, antenna, soft glow -->
+  <!-- Arvi 9000: Small white rounded robot with blue glowing eyes/screen, antenna with signal waves -->
   <!-- Hover glow underneath -->
   <ellipse cx="24" cy="60" rx="12" ry="3" fill="#2196F3" opacity="0.15"/>
   <ellipse cx="24" cy="58" rx="8" ry="2" fill="#64B5F6" opacity="0.2"/>
@@ -20,22 +20,33 @@
   <!-- Face screen area -->
   <rect x="12" y="24" width="24" height="18" rx="6" fill="#1A237E" opacity="0.9"/>
   <!-- Digital face on screen -->
-  <!-- Eyes (expressive digital) -->
+  <!-- Eyes (expressive digital, blue glowing) -->
   <rect x="16" y="28" width="5" height="6" rx="1" fill="#64B5F6"/>
   <rect x="27" y="28" width="5" height="6" rx="1" fill="#64B5F6"/>
   <!-- Eye highlights -->
   <rect x="17" y="29" width="2" height="2" fill="white" opacity="0.7"/>
   <rect x="28" y="29" width="2" height="2" fill="white" opacity="0.7"/>
+  <!-- Eye glow -->
+  <rect x="15" y="27" width="7" height="8" rx="2" fill="#2196F3" opacity="0.15"/>
+  <rect x="26" y="27" width="7" height="8" rx="2" fill="#2196F3" opacity="0.15"/>
   <!-- Digital smile -->
   <rect x="18" y="37" width="2" height="2" fill="#64B5F6"/>
   <rect x="20" y="39" width="8" height="1" fill="#64B5F6"/>
   <rect x="28" y="37" width="2" height="2" fill="#64B5F6"/>
   <!-- Antenna -->
-  <line x1="24" y1="14" x2="24" y2="6" stroke="#90A4AE" stroke-width="1.5"/>
-  <circle cx="24" cy="4" r="3" fill="#2196F3"/>
-  <circle cx="24" cy="4" r="1.5" fill="#64B5F6"/>
+  <line x1="24" y1="14" x2="24" y2="4" stroke="#90A4AE" stroke-width="2"/>
+  <circle cx="24" cy="3" r="3" fill="#2196F3"/>
+  <circle cx="24" cy="3" r="1.5" fill="#64B5F6"/>
+  <!-- Signal waves from antenna -->
+  <path d="M30,6 Q34,3 30,0" fill="none" stroke="#2196F3" stroke-width="1" opacity="0.5"/>
+  <path d="M34,8 Q40,3 34,-2" fill="none" stroke="#2196F3" stroke-width="0.8" opacity="0.35"/>
+  <path d="M38,10 Q46,3 38,-4" fill="none" stroke="#64B5F6" stroke-width="0.6" opacity="0.25"/>
+  <!-- Signal waves other side -->
+  <path d="M18,6 Q14,3 18,0" fill="none" stroke="#2196F3" stroke-width="1" opacity="0.5"/>
+  <path d="M14,8 Q8,3 14,-2" fill="none" stroke="#2196F3" stroke-width="0.8" opacity="0.35"/>
+  <path d="M10,10 Q2,3 10,-4" fill="none" stroke="#64B5F6" stroke-width="0.6" opacity="0.25"/>
   <!-- Antenna glow -->
-  <circle cx="24" cy="4" r="5" fill="none" stroke="#2196F3" stroke-width="0.5" opacity="0.3"/>
+  <circle cx="24" cy="3" r="5" fill="none" stroke="#2196F3" stroke-width="0.5" opacity="0.3"/>
   <!-- Side details -->
   <circle cx="8" cy="36" r="2" fill="#90A4AE"/>
   <circle cx="40" cy="36" r="2" fill="#90A4AE"/>

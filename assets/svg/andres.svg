@@ -1,59 +1,57 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 72 108" width="72" height="108">
-  <!-- Andrés: Middle-aged Latino man, curly hair, trimmed beard, lab coat, colorful apron, goggles, beaker+spatula -->
+  <!-- Andrés: Adult male, curly dark hair, beard, white lab coat with colorful patches, holding flask with liquid -->
   <!-- Shoes -->
   <rect x="18" y="96" width="14" height="10" rx="3" fill="#5D4037"/>
   <rect x="40" y="96" width="14" height="10" rx="3" fill="#5D4037"/>
   <!-- Pants -->
   <rect x="20" y="74" width="12" height="24" rx="2" fill="#455A64"/>
   <rect x="40" y="74" width="12" height="24" rx="2" fill="#455A64"/>
-  <!-- Lab coat (long) -->
+  <!-- Lab coat (long, white) -->
   <rect x="14" y="40" width="44" height="38" rx="4" fill="#F5F5F5"/>
   <line x1="36" y1="42" x2="36" y2="78" stroke="#E0E0E0" stroke-width="1"/>
   <!-- Lab coat collar -->
   <path d="M24,40 L30,48 L36,40 L42,48 L48,40" fill="none" stroke="#E0E0E0" stroke-width="1.5"/>
-  <!-- Colorful apron -->
-  <rect x="22" y="48" width="28" height="22" rx="2" fill="#FF9800"/>
-  <rect x="22" y="48" width="28" height="4" rx="1" fill="#F57C00"/>
-  <!-- Apron stripe pattern -->
-  <rect x="22" y="56" width="28" height="3" fill="#FFB74D" opacity="0.5"/>
-  <rect x="22" y="63" width="28" height="3" fill="#FFB74D" opacity="0.5"/>
-  <!-- Apron pocket -->
-  <rect x="28" y="60" width="16" height="8" rx="1" fill="#F57C00" opacity="0.4"/>
+  <!-- Colorful patches on lab coat -->
+  <rect x="16" y="48" width="10" height="8" rx="2" fill="#FF9800" opacity="0.7"/>
+  <rect x="42" y="56" width="10" height="8" rx="2" fill="#4CAF50" opacity="0.6"/>
+  <rect x="18" y="64" width="8" height="6" rx="2" fill="#2196F3" opacity="0.6"/>
+  <rect x="38" y="44" width="8" height="6" rx="2" fill="#E91E63" opacity="0.5"/>
+  <rect x="28" y="68" width="10" height="6" rx="2" fill="#9C27B0" opacity="0.5"/>
+  <!-- Patch stitch marks -->
+  <rect x="16" y="48" width="10" height="8" rx="2" fill="none" stroke="#E0E0E0" stroke-width="0.5" stroke-dasharray="2,1"/>
+  <rect x="42" y="56" width="10" height="8" rx="2" fill="none" stroke="#E0E0E0" stroke-width="0.5" stroke-dasharray="2,1"/>
   <!-- Arms (lab coat sleeves) -->
   <rect x="4" y="44" width="12" height="24" rx="4" fill="#F5F5F5"/>
   <rect x="56" y="44" width="12" height="24" rx="4" fill="#F5F5F5"/>
   <!-- Hands -->
   <circle cx="10" cy="70" r="5" fill="#C8956C"/>
   <circle cx="62" cy="70" r="5" fill="#C8956C"/>
-  <!-- Left hand: beaker -->
-  <path d="M4,62 L4,56 L16,56 L16,62 L12,68 L8,68 Z" fill="#B3E5FC" opacity="0.6" stroke="#90CAF9" stroke-width="1"/>
-  <rect x="6" y="53" width="8" height="4" rx="1" fill="#E0E0E0"/>
-  <rect x="6" y="62" width="8" height="4" fill="#4CAF50" opacity="0.5"/>
-  <!-- Right hand: spatula -->
-  <rect x="60" y="56" width="4" height="16" rx="1" fill="#795548"/>
-  <rect x="58" y="54" width="8" height="5" rx="2" fill="#9E9E9E"/>
+  <!-- Right hand: flask with colored liquid -->
+  <path d="M56,58 L56,52 L68,52 L68,58 L65,66 L59,66 Z" fill="#E3F2FD" opacity="0.7" stroke="#90CAF9" stroke-width="1"/>
+  <rect x="58" y="49" width="8" height="4" rx="1" fill="#E0E0E0"/>
+  <!-- Liquid in flask (green bubbling) -->
+  <path d="M59,60 L65,60 L65,66 L59,66 Z" fill="#4CAF50" opacity="0.6"/>
+  <circle cx="61" cy="62" r="1" fill="#81C784" opacity="0.8"/>
+  <circle cx="63" cy="64" r="0.8" fill="#A5D6A7" opacity="0.7"/>
+  <circle cx="60" cy="58" r="0.6" fill="#81C784" opacity="0.5"/>
   <!-- Neck -->
   <rect x="30" y="34" width="12" height="8" rx="3" fill="#C8956C"/>
   <!-- Head -->
   <ellipse cx="36" cy="22" rx="16" ry="17" fill="#C8956C"/>
-  <!-- Curly hair -->
-  <circle cx="24" cy="10" r="5" fill="#5D4037"/>
-  <circle cx="32" cy="7" r="6" fill="#5D4037"/>
-  <circle cx="40" cy="8" r="5.5" fill="#5D4037"/>
-  <circle cx="48" cy="11" r="5" fill="#5D4037"/>
-  <circle cx="22" cy="14" r="4" fill="#5D4037"/>
-  <circle cx="50" cy="14" r="4" fill="#5D4037"/>
+  <!-- Curly dark hair -->
+  <circle cx="24" cy="10" r="5" fill="#3E2723"/>
+  <circle cx="32" cy="7" r="6" fill="#3E2723"/>
+  <circle cx="40" cy="8" r="5.5" fill="#3E2723"/>
+  <circle cx="48" cy="11" r="5" fill="#3E2723"/>
+  <circle cx="22" cy="14" r="4" fill="#3E2723"/>
+  <circle cx="50" cy="14" r="4" fill="#3E2723"/>
   <circle cx="28" cy="6" r="4" fill="#4E342E"/>
   <circle cx="44" cy="6" r="4" fill="#4E342E"/>
-  <!-- Safety goggles on forehead -->
-  <rect x="22" y="12" width="28" height="7" rx="3" fill="#B0BEC5" opacity="0.8"/>
-  <circle cx="30" cy="15" r="5" fill="none" stroke="#78909C" stroke-width="1.5"/>
-  <circle cx="42" cy="15" r="5" fill="none" stroke="#78909C" stroke-width="1.5"/>
-  <circle cx="30" cy="15" r="3.5" fill="#E3F2FD" opacity="0.4"/>
-  <circle cx="42" cy="15" r="3.5" fill="#E3F2FD" opacity="0.4"/>
-  <line x1="35" y1="15" x2="37" y2="15" stroke="#78909C" stroke-width="1.5"/>
-  <!-- Trimmed beard -->
-  <path d="M24,28 Q28,32 36,33 Q44,32 48,28 L48,30 Q44,36 36,37 Q28,36 24,30 Z" fill="#5D4037" opacity="0.7"/>
+  <circle cx="36" cy="4" r="3.5" fill="#3E2723"/>
+  <!-- Trimmed beard (fuller) -->
+  <path d="M22,28 Q28,32 36,34 Q44,32 50,28 L50,32 Q44,38 36,40 Q28,38 22,32 Z" fill="#3E2723" opacity="0.8"/>
+  <path d="M24,30 Q28,28 32,30" fill="none" stroke="#4E342E" stroke-width="0.5" opacity="0.4"/>
+  <path d="M40,30 Q44,28 48,30" fill="none" stroke="#4E342E" stroke-width="0.5" opacity="0.4"/>
   <!-- Eyes (joyful) -->
   <ellipse cx="29" cy="22" rx="3.5" ry="3" fill="white"/>
   <ellipse cx="43" cy="22" rx="3.5" ry="3" fill="white"/>
@@ -65,8 +63,8 @@
   <path d="M22,22 L20,20" fill="none" stroke="#A07050" stroke-width="0.5"/>
   <path d="M50,22 L52,20" fill="none" stroke="#A07050" stroke-width="0.5"/>
   <!-- Eyebrows (cheerful, raised) -->
-  <path d="M25,18 Q29,16 33,18" fill="none" stroke="#5D4037" stroke-width="1.5"/>
-  <path d="M39,18 Q43,16 47,18" fill="none" stroke="#5D4037" stroke-width="1.5"/>
+  <path d="M25,18 Q29,16 33,18" fill="none" stroke="#3E2723" stroke-width="1.5"/>
+  <path d="M39,18 Q43,16 47,18" fill="none" stroke="#3E2723" stroke-width="1.5"/>
   <!-- Nose -->
   <ellipse cx="36" cy="26" rx="2.5" ry="2" fill="#B07850"/>
   <!-- Joyful open mouth -->

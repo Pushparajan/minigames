@@ -1,12 +1,12 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 96" width="64" height="96">
-  <!-- Rex: Quirky inventor, spiky hair, mismatched lab coat with patches, crooked goggles, sparking gadget -->
+  <!-- Rex: Boy with wild red/orange hair, goggles, lab coat, holding steampunk gadget with smoke -->
   <!-- Boots (mismatched) -->
   <rect x="14" y="84" width="14" height="10" rx="3" fill="#5D4037"/>
   <rect x="36" y="84" width="14" height="10" rx="3" fill="#37474F"/>
   <!-- Pants -->
   <rect x="16" y="66" width="12" height="20" rx="2" fill="#616161"/>
   <rect x="36" y="66" width="12" height="20" rx="2" fill="#616161"/>
-  <!-- Mismatched lab coat -->
+  <!-- Lab coat -->
   <rect x="10" y="36" width="44" height="34" rx="4" fill="#E0E0E0"/>
   <!-- Patches on coat -->
   <rect x="14" y="44" width="10" height="8" rx="1" fill="#7E57C2" opacity="0.6"/>
@@ -21,28 +21,37 @@
   <!-- Hands -->
   <circle cx="7" cy="64" r="5" fill="#E8C4A0"/>
   <circle cx="57" cy="64" r="5" fill="#E8C4A0"/>
-  <!-- Right hand: overcomplicated sparking gadget -->
-  <rect x="52" y="54" width="12" height="8" rx="2" fill="#546E7A"/>
-  <rect x="54" y="52" width="4" height="4" rx="1" fill="#78909C"/>
-  <rect x="60" y="50" width="3" height="6" rx="1" fill="#90A4AE"/>
-  <!-- Sparks -->
-  <line x1="62" y1="48" x2="64" y2="44" stroke="#FFEE58" stroke-width="1.5"/>
-  <line x1="60" y1="48" x2="58" y2="44" stroke="#FDD835" stroke-width="1"/>
-  <line x1="64" y1="50" x2="66" y2="46" stroke="#FFEE58" stroke-width="1"/>
-  <circle cx="63" cy="45" r="2" fill="#FFEE58" opacity="0.6"/>
+  <!-- Right hand: steampunk gadget -->
+  <rect x="50" y="52" width="14" height="10" rx="2" fill="#795548"/>
+  <rect x="52" y="50" width="4" height="4" rx="1" fill="#8D6E63"/>
+  <!-- Gears on gadget -->
+  <circle cx="56" cy="56" r="3" fill="none" stroke="#FFD54F" stroke-width="1"/>
+  <circle cx="56" cy="56" r="1" fill="#FFD54F"/>
+  <circle cx="60" cy="54" r="2" fill="none" stroke="#FFC107" stroke-width="0.8"/>
+  <circle cx="60" cy="54" r="0.7" fill="#FFC107"/>
+  <!-- Pipes on gadget -->
+  <rect x="62" y="50" width="2" height="8" rx="1" fill="#78909C"/>
+  <rect x="48" y="54" width="3" height="2" rx="0.5" fill="#90A4AE"/>
+  <!-- Smoke puffs from gadget -->
+  <circle cx="63" cy="46" r="3" fill="#B0BEC5" opacity="0.4"/>
+  <circle cx="60" cy="42" r="4" fill="#CFD8DC" opacity="0.35"/>
+  <circle cx="64" cy="38" r="3.5" fill="#ECEFF1" opacity="0.3"/>
+  <circle cx="58" cy="36" r="2.5" fill="#CFD8DC" opacity="0.25"/>
+  <circle cx="62" cy="33" r="2" fill="#ECEFF1" opacity="0.2"/>
   <!-- Neck -->
   <rect x="26" y="30" width="12" height="8" rx="3" fill="#E8C4A0"/>
   <!-- Head -->
   <ellipse cx="32" cy="18" rx="15" ry="16" fill="#E8C4A0"/>
-  <!-- Spiky hair (chaotic) -->
-  <polygon points="20,8 16,0 22,6" fill="#FF5722"/>
-  <polygon points="28,4 26,-2 32,2" fill="#FF5722"/>
-  <polygon points="36,3 38,-3 40,4" fill="#E64A19"/>
-  <polygon points="44,6 48,-1 46,8" fill="#FF5722"/>
-  <polygon points="24,6 18,2 22,10" fill="#E64A19"/>
-  <polygon points="40,5 46,0 44,8" fill="#FF5722"/>
+  <!-- Wild red/orange spiky hair -->
+  <polygon points="20,8 14,0 22,6" fill="#FF5722"/>
+  <polygon points="28,4 26,-4 32,2" fill="#FF5722"/>
+  <polygon points="36,3 38,-5 40,4" fill="#E64A19"/>
+  <polygon points="44,6 50,-2 46,8" fill="#FF5722"/>
+  <polygon points="24,6 16,0 22,10" fill="#E64A19"/>
+  <polygon points="40,5 48,-1 44,8" fill="#FF5722"/>
+  <polygon points="32,2 30,-4 34,0" fill="#FF7043"/>
   <path d="M17,16 Q20,4 32,2 Q44,4 47,16" fill="#FF5722"/>
-  <!-- Crooked goggles (one higher than other) -->
+  <!-- Goggles on head -->
   <ellipse cx="25" cy="16" rx="7" ry="6" fill="none" stroke="#546E7A" stroke-width="2"/>
   <ellipse cx="40" cy="18" rx="7" ry="6" fill="none" stroke="#546E7A" stroke-width="2"/>
   <ellipse cx="25" cy="16" rx="5" ry="4.5" fill="#E8F5E9" opacity="0.5"/>

@@ -1,26 +1,31 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 96" width="64" height="96">
-  <!-- Pancho: 12yo boy, messy hair, colorful patchwork hoodie, ukulele, glowing journal, energetic grin -->
+  <!-- Pancho: Boy with dark brown hair, colorful patchwork vest, holding small guitar/ukulele, music notes -->
   <!-- Sneakers -->
   <rect x="14" y="84" width="14" height="10" rx="3" fill="#FF7043"/>
   <rect x="36" y="84" width="14" height="10" rx="3" fill="#42A5F5"/>
   <!-- Jeans -->
   <rect x="16" y="64" width="12" height="22" rx="2" fill="#42A5F5"/>
   <rect x="36" y="64" width="12" height="22" rx="2" fill="#42A5F5"/>
-  <!-- Colorful patchwork hoodie -->
-  <rect x="12" y="38" width="40" height="28" rx="5" fill="#FF7043"/>
-  <!-- Patchwork pattern -->
-  <rect x="12" y="38" width="20" height="14" rx="3" fill="#AB47BC" opacity="0.6"/>
-  <rect x="32" y="52" width="20" height="14" rx="3" fill="#FFCA28" opacity="0.5"/>
-  <rect x="12" y="52" width="20" height="14" rx="3" fill="#26A69A" opacity="0.5"/>
-  <rect x="32" y="38" width="20" height="14" rx="3" fill="#EF5350" opacity="0.4"/>
-  <!-- Patch stitch lines -->
-  <line x1="32" y1="38" x2="32" y2="66" stroke="#fff" stroke-width="0.5" stroke-dasharray="2,2" opacity="0.4"/>
-  <line x1="12" y1="52" x2="52" y2="52" stroke="#fff" stroke-width="0.5" stroke-dasharray="2,2" opacity="0.4"/>
-  <!-- Hood -->
-  <path d="M18,38 Q32,30 46,38" fill="none" stroke="#D84315" stroke-width="2"/>
-  <!-- Arms -->
-  <rect x="2" y="42" width="12" height="20" rx="4" fill="#FF7043"/>
-  <rect x="50" y="42" width="12" height="20" rx="4" fill="#FFCA28"/>
+  <!-- T-shirt underneath vest -->
+  <rect x="14" y="38" width="36" height="28" rx="4" fill="#FFEB3B"/>
+  <!-- Colorful patchwork vest (open front, no hood) -->
+  <rect x="12" y="38" width="14" height="28" rx="3" fill="#AB47BC" opacity="0.7"/>
+  <rect x="38" y="38" width="14" height="28" rx="3" fill="#EF5350" opacity="0.7"/>
+  <!-- Vest patches -->
+  <rect x="12" y="52" width="14" height="14" rx="3" fill="#26A69A" opacity="0.6"/>
+  <rect x="38" y="52" width="14" height="14" rx="3" fill="#FFCA28" opacity="0.6"/>
+  <!-- Patch stitch lines on vest -->
+  <line x1="12" y1="52" x2="26" y2="52" stroke="#fff" stroke-width="0.5" stroke-dasharray="2,2" opacity="0.4"/>
+  <line x1="38" y1="52" x2="52" y2="52" stroke="#fff" stroke-width="0.5" stroke-dasharray="2,2" opacity="0.4"/>
+  <!-- Vest collar/border -->
+  <line x1="26" y1="38" x2="26" y2="66" stroke="#fff" stroke-width="0.5" opacity="0.3"/>
+  <line x1="38" y1="38" x2="38" y2="66" stroke="#fff" stroke-width="0.5" opacity="0.3"/>
+  <!-- Arms (yellow T-shirt sleeves) -->
+  <rect x="2" y="42" width="12" height="10" rx="4" fill="#FFEB3B"/>
+  <rect x="50" y="42" width="12" height="10" rx="4" fill="#FFEB3B"/>
+  <!-- Lower arms (skin) -->
+  <rect x="2" y="50" width="12" height="12" rx="4" fill="#C8956C"/>
+  <rect x="50" y="50" width="12" height="12" rx="4" fill="#C8956C"/>
   <!-- Hands -->
   <circle cx="8" cy="64" r="5" fill="#C8956C"/>
   <circle cx="56" cy="64" r="5" fill="#C8956C"/>
@@ -33,20 +38,17 @@
   <!-- Ukulele strings -->
   <line x1="3" y1="44" x2="3" y2="56" stroke="#E0E0E0" stroke-width="0.3"/>
   <line x1="5" y1="44" x2="5" y2="56" stroke="#E0E0E0" stroke-width="0.3"/>
-  <!-- Right hand: glowing journal -->
-  <rect x="50" y="54" width="12" height="10" rx="2" fill="#7E57C2"/>
-  <rect x="51" y="55" width="10" height="8" rx="1" fill="#9575CD"/>
-  <!-- Journal glow -->
-  <rect x="52" y="56" width="8" height="6" fill="#FFD54F" opacity="0.3"/>
-  <!-- Musical sparkles -->
-  <text x="0" y="40" font-size="8" fill="#FFCA28" opacity="0.6" font-family="sans-serif">♪</text>
-  <text x="58" y="48" font-size="6" fill="#AB47BC" opacity="0.5" font-family="sans-serif">♫</text>
-  <text x="12" y="34" font-size="5" fill="#FF7043" opacity="0.4" font-family="sans-serif">♩</text>
+  <!-- Musical notes floating around -->
+  <text x="0" y="38" font-size="8" fill="#FFCA28" opacity="0.7" font-family="sans-serif">♪</text>
+  <text x="58" y="44" font-size="7" fill="#AB47BC" opacity="0.6" font-family="sans-serif">♫</text>
+  <text x="12" y="34" font-size="6" fill="#FF7043" opacity="0.5" font-family="sans-serif">♩</text>
+  <text x="52" y="34" font-size="5" fill="#FFCA28" opacity="0.4" font-family="sans-serif">♪</text>
+  <text x="56" y="56" font-size="6" fill="#26A69A" opacity="0.4" font-family="sans-serif">♫</text>
   <!-- Neck -->
   <rect x="26" y="32" width="12" height="8" rx="3" fill="#C8956C"/>
   <!-- Head -->
   <ellipse cx="32" cy="18" rx="15" ry="16" fill="#C8956C"/>
-  <!-- Messy hair -->
+  <!-- Dark brown messy hair -->
   <path d="M17,16 Q20,4 32,2 Q44,4 47,16" fill="#5D4037"/>
   <path d="M20,8 Q18,2 24,4" fill="#5D4037" stroke="#5D4037" stroke-width="1"/>
   <path d="M36,6 Q40,0 42,6" fill="#5D4037" stroke="#5D4037" stroke-width="1"/>

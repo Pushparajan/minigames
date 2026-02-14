@@ -1,17 +1,27 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 96" width="64" height="96">
-  <!-- Guha: 10yo South Asian boy, red hoodie, lightning bolt, magnifying glass -->
-  <!-- Sneakers -->
-  <rect x="14" y="84" width="14" height="10" rx="3" fill="#546E7A"/>
-  <rect x="36" y="84" width="14" height="10" rx="3" fill="#546E7A"/>
-  <!-- Cargo shorts -->
+  <!-- Guha: 10yo South Asian boy, black hair, red hoodie with lightning bolt, magnifying glass, brown shorts, red sneakers -->
+  <!-- Red sneakers -->
+  <rect x="14" y="84" width="14" height="10" rx="3" fill="#E53935"/>
+  <rect x="36" y="84" width="14" height="10" rx="3" fill="#E53935"/>
+  <rect x="14" y="84" width="14" height="3" rx="1" fill="#C62828"/>
+  <rect x="36" y="84" width="14" height="3" rx="1" fill="#C62828"/>
+  <!-- White sole lines -->
+  <rect x="14" y="91" width="14" height="2" rx="1" fill="#FAFAFA"/>
+  <rect x="36" y="91" width="14" height="2" rx="1" fill="#FAFAFA"/>
+  <!-- Brown cargo shorts -->
   <rect x="16" y="64" width="12" height="22" rx="2" fill="#8D6E63"/>
   <rect x="36" y="64" width="12" height="22" rx="2" fill="#8D6E63"/>
+  <!-- Cargo pocket details -->
+  <rect x="18" y="72" width="8" height="6" rx="1" fill="#795548" opacity="0.5"/>
+  <rect x="38" y="72" width="8" height="6" rx="1" fill="#795548" opacity="0.5"/>
   <!-- Red hoodie body -->
   <rect x="12" y="38" width="40" height="30" rx="5" fill="#E53935"/>
   <!-- Hoodie hood outline -->
   <path d="M18,38 Q32,28 46,38" fill="none" stroke="#C62828" stroke-width="2"/>
-  <!-- Lightning bolt pattern on hoodie -->
-  <polygon points="28,44 32,50 30,50 34,58 29,52 31,52 27,44" fill="#FDD835" opacity="0.8"/>
+  <!-- Lightning bolt pattern on hoodie (large, prominent) -->
+  <polygon points="26,42 32,50 29,50 35,60 28,52 31,52 25,42" fill="#FDD835" opacity="0.9"/>
+  <!-- Hoodie pocket -->
+  <rect x="22" y="56" width="20" height="8" rx="2" fill="#C62828" opacity="0.4"/>
   <!-- Arms -->
   <rect x="4" y="42" width="10" height="22" rx="4" fill="#E53935"/>
   <rect x="50" y="42" width="10" height="22" rx="4" fill="#E53935"/>
@@ -19,9 +29,11 @@
   <circle cx="9" cy="66" r="5" fill="#C68642"/>
   <circle cx="55" cy="66" r="5" fill="#C68642"/>
   <!-- Magnifying glass in right hand -->
-  <circle cx="57" cy="60" r="6" fill="none" stroke="#FFD54F" stroke-width="2"/>
-  <line x1="61" y1="64" x2="60" y2="68" stroke="#FFD54F" stroke-width="2"/>
-  <circle cx="57" cy="60" r="4" fill="#E3F2FD" opacity="0.4"/>
+  <circle cx="57" cy="58" r="7" fill="none" stroke="#FFD54F" stroke-width="2.5"/>
+  <line x1="62" y1="63" x2="64" y2="68" stroke="#8D6E63" stroke-width="2.5" stroke-linecap="round"/>
+  <circle cx="57" cy="58" r="5" fill="#E3F2FD" opacity="0.35"/>
+  <!-- Lens glare -->
+  <ellipse cx="55" cy="56" rx="2" ry="1.5" fill="white" opacity="0.4"/>
   <!-- Neck -->
   <rect x="26" y="32" width="12" height="8" rx="3" fill="#C68642"/>
   <!-- Head -->
@@ -35,6 +47,7 @@
   <!-- Messy tufts -->
   <path d="M24,4 Q22,0 26,2" fill="#212121"/>
   <path d="M38,3 Q42,0 40,4" fill="#212121"/>
+  <path d="M31,2 Q30,-1 34,1" fill="#212121"/>
   <!-- Eyes (bright, curious) -->
   <ellipse cx="25" cy="22" rx="4" ry="4.5" fill="white"/>
   <ellipse cx="39" cy="22" rx="4" ry="4.5" fill="white"/>
