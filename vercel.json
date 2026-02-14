@@ -1,22 +1,25 @@
 {
   "version": 2,
 
-  "buildCommand": "",
-  "installCommand": "cd server && npm install",
-  "outputDirectory": "",
-
-  "functions": {
-    "api/index.js": {
-      "memory": 512,
-      "maxDuration": 30,
-      "includeFiles": "server/**"
+  "builds": [
+    {
+      "src": "server-rs/Cargo.toml",
+      "use": "vercel-rust"
     }
-  },
+  ],
 
   "rewrites": [
     {
       "source": "/api/v1/:path*",
-      "destination": "/api/index.js"
+      "destination": "/server-rs"
+    },
+    {
+      "source": "/health",
+      "destination": "/server-rs"
+    },
+    {
+      "source": "/metrics",
+      "destination": "/server-rs"
     },
     {
       "source": "/admin",
