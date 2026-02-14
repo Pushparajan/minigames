@@ -2,7 +2,7 @@
 
 **[minigames.cool](https://minigames.cool)**
 
-A multi-tenant STEM gaming platform with 25 educational minigames, built with Phaser 3 and an Express.js API backend. Features game categories, multiplayer, subscription billing, leaderboards, and admin game management. Hosted on Vercel with a custom domain.
+A multi-tenant STEM gaming platform with 25 educational minigames, built with Phaser 3 and a Rust (Axum) API backend. Features game categories, multiplayer, subscription billing, leaderboards, and admin game management. Hosted on Vercel with a custom domain.
 
 ## Features
 
@@ -22,7 +22,6 @@ A multi-tenant STEM gaming platform with 25 educational minigames, built with Ph
 
 ```
 minigames/
-├── api/index.js              # Vercel serverless entry point
 ├── assets/svg/               # 12 character SVG sprites
 ├── css/styles.css            # Global styles (responsive, accessible)
 ├── js/
@@ -38,18 +37,23 @@ minigames/
 │   ├── admin-games.js        # Admin game/category management UI
 │   ├── lobby-ui.js           # Multiplayer lobby UI
 │   └── site-ui.js            # Auth, billing, modal management
-├── server/                   # Express.js API backend
-│   ├── config/               # App configuration
-│   ├── middleware/            # Auth, rate limiting, tenancy, monitoring
-│   ├── models/               # PostgreSQL connection pool
-│   ├── multiplayer/          # WebSocket server, rooms, matchmaking, anti-cheat
-│   ├── routes/               # 15 API route modules
-│   ├── services/             # Stripe, caching, leaderboards, achievements
-│   └── tests/                # Test suite (8 test files)
+├── server-rs/                # Rust (Axum) API backend
+│   ├── src/
+│   │   ├── main.rs           # Router, handler, app state
+│   │   ├── routes/           # 18 route modules
+│   │   ├── middleware/        # Auth, rate limiting, tenancy, entitlements
+│   │   ├── models/           # Database entities (serde + sqlx)
+│   │   ├── services/         # Stripe, leaderboards, achievements, rooms
+│   │   ├── cache.rs          # Redis wrapper
+│   │   ├── config.rs         # Environment configuration
+│   │   ├── db.rs             # PostgreSQL pool initialization
+│   │   └── error.rs          # Custom error types
+│   └── Cargo.toml            # Rust dependencies
 ├── admin/                    # Admin console SPA
 ├── db/migrations/            # 7 PostgreSQL migrations
 ├── docs/                     # Project documentation
-├── vercel.json               # Vercel deployment config
+├── setup.sh                  # Automated Vercel deployment script
+├── vercel.json               # Vercel deployment config (vercel-rust)
 └── package.json              # Root package
 ```
 
@@ -57,7 +61,7 @@ minigames/
 
 ### Prerequisites
 
-- Node.js 18+
+- Rust 1.75+ (with `cargo`)
 - PostgreSQL 14+
 - Redis 7+
 - [Stripe](https://stripe.com) account (for billing)
@@ -65,26 +69,26 @@ minigames/
 ### Local Development
 
 ```bash
-# Clone and install
+# Clone
 git clone <your-repo-url>
 cd minigames
-cd server && npm install
 
 # Configure environment
-cp .env.example .env
+cp server-rs/.env.example server-rs/.env
 # Edit .env with your database, Redis, and Stripe credentials
 
 # Run migrations
-npm run migrate
+psql $DATABASE_URL -f db/migrations/001_initial_schema.sql
+# ... (see Deploy section for all migrations)
 
-# Start dev server (Express + WebSocket)
-npm run dev
+# Start dev server
+cd server-rs && cargo run
 
-# Run tests
-npm test
+# Or use the automated setup
+./setup.sh
 ```
 
-The app serves on `http://localhost:3000`. The API is at `/api/v1/*` and the WebSocket server at `ws://localhost:3000/ws`.
+The API serves at `/api/v1/*` and the WebSocket server at `ws://localhost:3000/ws`.
 
 ## Deploy to Vercel
 
@@ -106,6 +110,8 @@ psql $DATABASE_URL -f db/migrations/005_custom_games.sql
 psql $DATABASE_URL -f db/migrations/006_multiplayer_tech_stack.sql
 psql $DATABASE_URL -f db/migrations/007_game_categories.sql
 ```
+
+Or use the automated setup script: `./setup.sh`
 
 ### 3. Configure Environment Variables
 
@@ -132,7 +138,7 @@ STRIPE_SECRET_KEY, STRIPE_PUBLISHABLE_KEY, STRIPE_WEBHOOK_SECRET
 STRIPE_PRICE_STARTER, STRIPE_PRICE_PRO, STRIPE_PRICE_ENTERPRISE
 ```
 
-See `server/.env.example` for the full list with defaults.
+See `server-rs/.env.example` for the full list with defaults.
 
 ### 4. Deploy
 
@@ -165,12 +171,10 @@ WebSockets require a persistent server. Deploy the server separately to Railway,
 
 | Setting | Value |
 |---|---|
-| Framework | None (static + serverless) |
-| Build command | _(empty)_ |
-| Install command | `cd server && npm install` |
-| Function memory | 512 MB |
-| Function timeout | 30 seconds |
-| API route | `/api/v1/*` → `api/index.js` |
+| Framework | None (static + serverless Rust) |
+| Build | `vercel-rust` builder via `server-rs/Cargo.toml` |
+| API route | `/api/v1/*` → `server-rs` |
+| Health/Metrics | `/health`, `/metrics` → `server-rs` |
 | Domain | `minigames.cool` (GoDaddy → Vercel) |
 
 ## API Reference
@@ -242,18 +246,18 @@ See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for system design details.
 |---|---|
 | Game Engine | Phaser 3.60.0 (WebGL/Canvas) |
 | Frontend | Vanilla JS, CSS3 |
-| Backend | Express.js 4.18 |
-| Database | PostgreSQL 14+ |
+| Backend | Rust (Axum 0.7, Tower, Tokio) |
+| Database | PostgreSQL 14+ (SQLx async driver) |
 | Cache | Redis 7+ (sorted sets for leaderboards) |
 | Billing | Stripe (subscriptions, webhooks) |
-| Realtime | WebSocket (ws 8.16) |
-| Hosting | Vercel (serverless) |
+| Realtime | WebSocket |
+| Hosting | Vercel (vercel-rust serverless) |
 | Domain | GoDaddy DNS → Vercel |
 
 ## Testing
 
 ```bash
-cd server && npm test
+cd server-rs && cargo test
 ```
 
 Tests cover: billing, entitlements, organisations, storage quotas, Stripe service, subscription sync, usage meters, webhooks.
