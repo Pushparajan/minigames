@@ -1,0 +1,177 @@
+/* ========================================
+   STEM School Adventures - Global Styles
+   ======================================== */
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
+    color: #fff;
+    min-height: 100vh;
+    overflow-x: hidden;
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+}
+
+/* Launcher Screen */
+#launcher {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+.launcher-header {
+    text-align: center;
+    padding: 30px 10px;
+}
+
+.launcher-header h1 {
+    font-size: clamp(1.8rem, 5vw, 3rem);
+    background: linear-gradient(90deg, #ff6b6b, #feca57, #48dbfb, #ff9ff3);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin-bottom: 8px;
+}
+
+.launcher-header .subtitle {
+    font-size: clamp(0.9rem, 2.5vw, 1.2rem);
+    color: #a0a0c0;
+}
+
+/* Game Grid */
+.game-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 16px;
+    padding: 10px;
+}
+
+.game-card {
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    padding: 18px;
+    cursor: pointer;
+    transition: transform 0.2s, box-shadow 0.2s, border-color 0.2s;
+    position: relative;
+    overflow: hidden;
+}
+
+.game-card:hover,
+.game-card:active {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 30px rgba(100, 100, 255, 0.2);
+    border-color: rgba(255, 255, 255, 0.3);
+}
+
+.game-card .card-number {
+    position: absolute;
+    top: 8px;
+    right: 12px;
+    font-size: 0.75rem;
+    color: rgba(255, 255, 255, 0.3);
+}
+
+.game-card .card-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 8px;
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.4rem;
+}
+
+.game-card h3 {
+    font-size: 1rem;
+    margin-bottom: 4px;
+    color: #e0e0ff;
+}
+
+.game-card .card-character {
+    font-size: 0.8rem;
+    color: #a0a0d0;
+    margin-bottom: 6px;
+}
+
+.game-card .card-mechanic {
+    font-size: 0.75rem;
+    color: #7070a0;
+    line-height: 1.3;
+}
+
+/* Game Container */
+#game-container {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: #111;
+    z-index: 100;
+}
+
+#game-hud {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 16px;
+    background: rgba(0, 0, 0, 0.8);
+    color: #fff;
+    font-size: 0.9rem;
+    z-index: 110;
+    position: relative;
+}
+
+.hud-btn {
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: #fff;
+    padding: 6px 14px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.85rem;
+    transition: background 0.2s;
+}
+
+.hud-btn:hover {
+    background: rgba(255, 255, 255, 0.2);
+}
+
+#hud-title {
+    font-weight: 600;
+}
+
+#phaser-container {
+    width: 100%;
+    height: calc(100% - 40px);
+}
+
+#phaser-container canvas {
+    display: block;
+    margin: 0 auto;
+}
+
+/* Mobile adjustments */
+@media (max-width: 600px) {
+    .game-grid {
+        grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+        gap: 10px;
+    }
+
+    .game-card {
+        padding: 14px;
+    }
+
+    #game-hud {
+        font-size: 0.8rem;
+        padding: 6px 10px;
+    }
+}

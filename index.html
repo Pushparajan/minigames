@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>STEM School Adventures</title>
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+    <div id="launcher">
+        <header class="launcher-header">
+            <h1>STEM School Adventures</h1>
+            <p class="subtitle">25 Classic Games Reimagined for Learning</p>
+        </header>
+        <div id="game-grid" class="game-grid"></div>
+    </div>
+    <div id="game-container" style="display:none;">
+        <div id="game-hud">
+            <button id="btn-back" class="hud-btn">&larr; Back</button>
+            <span id="hud-title"></span>
+            <span id="hud-score">Score: 0</span>
+        </div>
+        <div id="phaser-container"></div>
+    </div>
+
+    <!-- Phaser 3 via CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/phaser@3.60.0/dist/phaser.min.js"></script>
+
+    <!-- Engine Core -->
+    <script src="js/engine/CharacterFactory.js"></script>
+    <script src="js/engine/GameRegistry.js"></script>
+    <script src="js/engine/BootScene.js"></script>
+    <script src="js/engine/Launcher.js"></script>
+
+    <!-- 25 Game Modules -->
+    <script src="js/games/PhysicsMasterBilliards.js"></script>
+    <script src="js/games/STEMProjectVolley.js"></script>
+    <script src="js/games/LogicronsGridShift.js"></script>
+    <script src="js/games/DroneDefense.js"></script>
+    <script src="js/games/LabBreach.js"></script>
+    <script src="js/games/GeologyDeepDive.js"></script>
+    <script src="js/games/CampusDash.js"></script>
+    <script src="js/games/SafetyFirstDefense.js"></script>
+    <script src="js/games/GravityShiftRun.js"></script>
+    <script src="js/games/DemoDay.js"></script>
+    <script src="js/games/ChemistryEscape.js"></script>
+    <script src="js/games/RoverFieldTest.js"></script>
+    <script src="js/games/HydroLogicPuzzles.js"></script>
+    <script src="js/games/ColorLabQuest.js"></script>
+    <script src="js/games/CableCarConundrum.js"></script>
+    <script src="js/games/FindThePrincipal.js"></script>
+    <script src="js/games/FormulaSTEM.js"></script>
+    <script src="js/games/CampusGuard.js"></script>
+    <script src="js/games/HistoryVaultEscape.js"></script>
+    <script src="js/games/MolecularSplit.js"></script>
+    <script src="js/games/HeavyGearDelivery.js"></script>
+    <script src="js/games/AeroEngineering.js"></script>
+    <script src="js/games/RobotRepairBay.js"></script>
+    <script src="js/games/ParkourLab.js"></script>
+    <script src="js/games/STEMCelebration.js"></script>
+</body>
+</html>
