@@ -31,6 +31,31 @@ const cache = require('./services/cache');
 const app = express();
 
 // =========================================
+// Serverless Connection Management
+// =========================================
+// Lazy-init DB and Redis on first request. Connections
+// persist across warm invocations in serverless runtimes.
+
+let _initialized = false;
+
+async function ensureConnections() {
+    if (_initialized) return;
+    await db.init();
+    await cache.init();
+    _initialized = true;
+}
+
+app.use(async (req, res, next) => {
+    try {
+        await ensureConnections();
+        next();
+    } catch (err) {
+        console.error('Connection init failed:', err);
+        res.status(503).json({ error: 'Service starting up, please retry' });
+    }
+});
+
+// =========================================
 // Global Middleware
 // =========================================
 
@@ -80,22 +105,21 @@ app.use('/api/v1/organisations', authenticate, organisationRoutes);
 app.use(errorHandler);
 
 // =========================================
-// Start Server
+// Start Server (local dev only)
 // =========================================
 
-async function start() {
-    try {
-        await db.init();
-        await cache.init();
-        app.listen(config.port, () => {
-            console.log(`STEM Adventures API running on port ${config.port} [${config.nodeEnv}]`);
-        });
-    } catch (err) {
-        console.error('Failed to start server:', err);
-        process.exit(1);
-    }
+if (require.main === module) {
+    (async () => {
+        try {
+            await ensureConnections();
+            app.listen(config.port, () => {
+                console.log(`STEM Adventures API running on port ${config.port} [${config.nodeEnv}]`);
+            });
+        } catch (err) {
+            console.error('Failed to start server:', err);
+            process.exit(1);
+        }
+    })();
 }
-
-start();
 
 module.exports = app;

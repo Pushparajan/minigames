@@ -1,0 +1,12 @@
+{
+  "name": "stem-adventures",
+  "version": "1.0.0",
+  "private": true,
+  "description": "STEM School Adventures — SaaS mini-game platform",
+  "scripts": {
+    "dev": "cd server && npm run dev",
+    "start": "cd server && npm start",
+    "test": "cd server && npm test",
+    "vercel-build": "echo 'No build step required'"
+  }
+}
