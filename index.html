@@ -3,12 +3,59 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>STEM School Adventures — minigames.cool</title>
+    <title>STEM School Adventures — 25 Educational Minigames | minigames.cool</title>
+    <meta name="description" content="Play 25 classic games reimagined for STEM learning. Explore physics, chemistry, engineering, and more through interactive browser-based minigames. Free to play.">
+    <meta name="theme-color" content="#302b63">
+    <link rel="canonical" href="https://minigames.cool/">
+
+    <!-- Open Graph -->
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="STEM School Adventures — 25 Educational Minigames">
+    <meta property="og:description" content="Play 25 classic games reimagined for STEM learning. Physics, chemistry, engineering and more — free in your browser.">
+    <meta property="og:url" content="https://minigames.cool/">
+    <meta property="og:site_name" content="STEM School Adventures">
+    <meta property="og:locale" content="en_US">
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="STEM School Adventures — 25 Educational Minigames">
+    <meta name="twitter:description" content="Play 25 classic games reimagined for STEM learning. Free in your browser.">
+
+    <!-- Preconnect to CDN -->
+    <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+    <link rel="dns-prefetch" href="https://cdn.jsdelivr.net">
+
     <link rel="stylesheet" href="css/styles.css">
+
+    <!-- Structured Data -->
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "WebApplication",
+        "name": "STEM School Adventures",
+        "url": "https://minigames.cool/",
+        "description": "25 classic games reimagined for STEM learning — physics, chemistry, engineering, and more.",
+        "applicationCategory": "EducationalApplication",
+        "operatingSystem": "Web Browser",
+        "offers": [
+            { "@type": "Offer", "price": "0", "priceCurrency": "USD", "name": "Free" },
+            { "@type": "Offer", "price": "4.99", "priceCurrency": "USD", "name": "Starter" },
+            { "@type": "Offer", "price": "9.99", "priceCurrency": "USD", "name": "Pro" }
+        ],
+        "educationalAlignment": {
+            "@type": "AlignmentObject",
+            "educationalFramework": "STEM",
+            "targetName": "Science, Technology, Engineering, Mathematics"
+        }
+    }
+    </script>
 </head>
 <body>
+    <!-- Skip to main content (accessibility) -->
+    <a href="#game-grid" class="skip-link">Skip to game library</a>
+
     <!-- Top Navigation Bar -->
-    <nav id="top-nav">
+    <nav id="top-nav" aria-label="Main navigation">
         <div class="nav-left">
             <a href="/" class="nav-brand">STEM School Adventures</a>
         </div>
@@ -31,56 +78,62 @@
     </nav>
 
     <!-- Launcher Screen -->
-    <div id="launcher">
+    <main id="launcher">
         <header class="launcher-header">
-            <h1>STEM School Adventures</h1>
+            <h1 tabindex="-1">STEM School Adventures</h1>
             <p class="subtitle">25 Classic Games Reimagined for Learning</p>
         </header>
-        <div id="game-grid" class="game-grid"></div>
-    </div>
+        <nav id="category-filters" class="category-filters" aria-label="Game categories"></nav>
+        <section id="game-grid" class="game-grid" aria-label="Game library" role="list"></section>
+    </main>
 
     <!-- Game Container -->
-    <div id="game-container" style="display:none;">
+    <div id="game-container" style="display:none;" role="region" aria-label="Game player">
         <div id="game-hud">
-            <button id="btn-back" class="hud-btn">&larr; Back</button>
-            <span id="hud-title"></span>
-            <span id="hud-score">Score: 0</span>
+            <button id="btn-back" class="hud-btn" aria-label="Back to game library">&larr; Back</button>
+            <span id="hud-title" aria-live="polite"></span>
+            <span id="hud-score" role="status" aria-live="polite">Score: 0</span>
         </div>
-        <div id="phaser-container"></div>
+        <div id="phaser-container" role="application" aria-label="Game canvas"></div>
     </div>
 
     <!-- Modal Overlay -->
     <div id="modal-overlay" class="modal-overlay" style="display:none;" onclick="SiteUI.closeModal(event)">
         <!-- Login Modal -->
-        <div id="modal-login" class="modal" style="display:none;">
-            <h2>Log In</h2>
+        <div id="modal-login" class="modal" style="display:none;" role="dialog" aria-modal="true" aria-labelledby="modal-login-title">
+            <h2 id="modal-login-title">Log In</h2>
             <form onsubmit="SiteUI.handleLogin(event)">
+                <label for="login-email" class="sr-only">Email</label>
                 <input type="email" id="login-email" placeholder="Email" required autocomplete="email">
+                <label for="login-password" class="sr-only">Password</label>
                 <input type="password" id="login-password" placeholder="Password" required autocomplete="current-password">
-                <div id="login-error" class="form-error"></div>
+                <div id="login-error" class="form-error" role="alert" aria-live="assertive"></div>
                 <button type="submit" class="btn-primary btn-full">Log In</button>
             </form>
             <p class="modal-switch">No account? <a href="#" onclick="SiteUI.showRegister(); return false;">Sign up</a></p>
-            <button class="modal-close" onclick="SiteUI.closeModal()">&times;</button>
+            <button class="modal-close" onclick="SiteUI.closeModal()" aria-label="Close dialog">&times;</button>
         </div>
 
         <!-- Register Modal -->
-        <div id="modal-register" class="modal" style="display:none;">
-            <h2>Create Account</h2>
+        <div id="modal-register" class="modal" style="display:none;" role="dialog" aria-modal="true" aria-labelledby="modal-register-title">
+            <h2 id="modal-register-title">Create Account</h2>
             <form onsubmit="SiteUI.handleRegister(event)">
+                <label for="reg-name" class="sr-only">Display Name</label>
                 <input type="text" id="reg-name" placeholder="Display Name" required minlength="2" maxlength="30" autocomplete="username">
+                <label for="reg-email" class="sr-only">Email</label>
                 <input type="email" id="reg-email" placeholder="Email" required autocomplete="email">
+                <label for="reg-password" class="sr-only">Password (minimum 8 characters)</label>
                 <input type="password" id="reg-password" placeholder="Password (min 8 chars)" required minlength="8" autocomplete="new-password">
-                <div id="reg-error" class="form-error"></div>
+                <div id="reg-error" class="form-error" role="alert" aria-live="assertive"></div>
                 <button type="submit" class="btn-primary btn-full">Create Account</button>
             </form>
             <p class="modal-switch">Have an account? <a href="#" onclick="SiteUI.showLogin(); return false;">Log in</a></p>
-            <button class="modal-close" onclick="SiteUI.closeModal()">&times;</button>
+            <button class="modal-close" onclick="SiteUI.closeModal()" aria-label="Close dialog">&times;</button>
         </div>
 
         <!-- Plans Modal -->
-        <div id="modal-plans" class="modal modal-wide" style="display:none;">
-            <h2>Subscription Plans</h2>
+        <div id="modal-plans" class="modal modal-wide" style="display:none;" role="dialog" aria-modal="true" aria-labelledby="modal-plans-title">
+            <h2 id="modal-plans-title">Subscription Plans</h2>
             <div id="plans-grid" class="plans-grid">
                 <div class="plan-card">
                     <h3>Free</h3>
@@ -127,12 +180,12 @@
                     <button class="btn-primary btn-full" onclick="SiteUI.subscribe('enterprise')">Subscribe</button>
                 </div>
             </div>
-            <button class="modal-close" onclick="SiteUI.closeModal()">&times;</button>
+            <button class="modal-close" onclick="SiteUI.closeModal()" aria-label="Close dialog">&times;</button>
         </div>
 
         <!-- Billing Modal -->
-        <div id="modal-billing" class="modal" style="display:none;">
-            <h2>My Subscription</h2>
+        <div id="modal-billing" class="modal" style="display:none;" role="dialog" aria-modal="true" aria-labelledby="modal-billing-title">
+            <h2 id="modal-billing-title">My Subscription</h2>
             <div id="billing-content">
                 <div id="billing-loading">Loading...</div>
                 <div id="billing-info" style="display:none;">
@@ -150,16 +203,17 @@
                     <button class="btn-primary btn-full" onclick="SiteUI.showPlans()">View Plans</button>
                 </div>
             </div>
-            <button class="modal-close" onclick="SiteUI.closeModal()">&times;</button>
+            <button class="modal-close" onclick="SiteUI.closeModal()" aria-label="Close dialog">&times;</button>
         </div>
 
         <!-- Multiplayer Lobby Modal -->
-        <div id="modal-lobby" class="modal modal-wide" style="display:none;">
-            <h2>Multiplayer Lobby</h2>
+        <div id="modal-lobby" class="modal modal-wide" style="display:none;" role="dialog" aria-modal="true" aria-labelledby="modal-lobby-title">
+            <h2 id="modal-lobby-title">Multiplayer Lobby</h2>
             <div id="lobby-content">
                 <!-- Lobby List View -->
                 <div id="lobby-list">
                     <div class="lobby-actions">
+                        <label for="lobby-game-filter" class="sr-only">Filter by game</label>
                         <select id="lobby-game-filter" onchange="LobbyUI.refresh()">
                             <option value="">All Games</option>
                         </select>
@@ -174,17 +228,17 @@
                 <!-- Create Room View -->
                 <div id="lobby-create" style="display:none;">
                     <form onsubmit="LobbyUI.handleCreate(event)">
-                        <label>Game</label>
+                        <label for="create-game">Game</label>
                         <select id="create-game" required></select>
-                        <label>Room Name</label>
+                        <label for="create-name">Room Name</label>
                         <input type="text" id="create-name" placeholder="My Game Room" maxlength="40">
-                        <label>Max Players</label>
+                        <label for="create-max">Max Players</label>
                         <select id="create-max">
                             <option value="2">2 Players</option>
                             <option value="3">3 Players</option>
                             <option value="4">4 Players</option>
                         </select>
-                        <label><input type="checkbox" id="create-private"> Private Room</label>
+                        <label for="create-private"><input type="checkbox" id="create-private"> Private Room</label>
                         <div class="lobby-form-actions">
                             <button type="button" class="btn-outline" onclick="LobbyUI.showList()">Back</button>
                             <button type="submit" class="btn-primary">Create Room</button>
@@ -202,6 +256,7 @@
                     <div id="room-chat" class="room-chat">
                         <div id="room-chat-messages" class="room-chat-messages"></div>
                         <div class="room-chat-input">
+                            <label for="room-chat-text" class="sr-only">Chat message</label>
                             <input type="text" id="room-chat-text" placeholder="Type a message..." maxlength="500" onkeydown="if(event.key==='Enter')LobbyUI.sendChat()">
                             <button class="btn-primary btn-sm" onclick="LobbyUI.sendChat()">Send</button>
                         </div>
@@ -213,19 +268,36 @@
                     </div>
                 </div>
             </div>
-            <button class="modal-close" onclick="SiteUI.closeModal()">&times;</button>
+            <button class="modal-close" onclick="SiteUI.closeModal()" aria-label="Close dialog">&times;</button>
         </div>
 
         <!-- Admin: Game Management Modal -->
-        <div id="modal-admin-games" class="modal modal-wide" style="display:none;">
-            <h2>Game Management</h2>
+        <div id="modal-admin-games" class="modal modal-wide" style="display:none;" role="dialog" aria-modal="true" aria-labelledby="modal-admin-title">
+            <h2 id="modal-admin-title">Game Management</h2>
+
+            <!-- View Tabs -->
+            <div class="ag-view-tabs">
+                <button id="ag-tab-games" class="ag-view-tab ag-tab-active" onclick="AdminGames.backToList()">Games</button>
+                <button id="ag-tab-categories" class="ag-view-tab" onclick="AdminGames.showCategoriesView()">Categories</button>
+            </div>
 
             <!-- Game List View -->
             <div id="admin-games-list">
                 <div class="ag-actions">
                     <button class="btn-primary" onclick="AdminGames.showAddForm()">Add Game</button>
+                    <button class="btn-outline" onclick="AdminGames.showAssignBuiltIn()">Assign Category to Built-in Game</button>
                 </div>
                 <div id="admin-games-table">
+                    <p class="admin-games-empty">Loading...</p>
+                </div>
+            </div>
+
+            <!-- Categories View -->
+            <div id="admin-categories-view" style="display:none;">
+                <div class="ag-actions">
+                    <button class="btn-primary" onclick="AdminGames.showAddCategory()">Add Category</button>
+                </div>
+                <div id="admin-categories-table">
                     <p class="admin-games-empty">Loading...</p>
                 </div>
             </div>
@@ -272,6 +344,8 @@
                             <input type="number" id="ag-sort-order" value="100" min="0" max="999">
                         </div>
                     </div>
+                    <span id="ag-categories-label">Categories</span>
+                    <div id="ag-categories-checkboxes" class="ag-categories-checkboxes" role="group" aria-labelledby="ag-categories-label"></div>
                     <label for="ag-scene-code">Scene Code (Phaser.Scene class)</label>
                     <textarea id="ag-scene-code" rows="12" placeholder="Return a Phaser.Scene subclass. Example:&#10;&#10;class MyGame extends Phaser.Scene {&#10;  constructor() { super({ key: 'MyGame' }); }&#10;  create() { /* ... */ }&#10;}&#10;return MyGame;" required></textarea>
                     <div id="ag-form-error" class="form-error"></div>
@@ -282,7 +356,7 @@
                 </form>
             </div>
 
-            <button class="modal-close" onclick="SiteUI.closeModal()">&times;</button>
+            <button class="modal-close" onclick="SiteUI.closeModal()" aria-label="Close dialog">&times;</button>
         </div>
     </div>
 

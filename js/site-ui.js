@@ -79,18 +79,30 @@ const SiteUI = (() => {
     // Modal Management
     // =========================================
 
+    let _previousFocusEl = null;
+
     function _showModal(modalId) {
+        _previousFocusEl = document.activeElement;
         const overlay = document.getElementById('modal-overlay');
         // Hide all modals first
         overlay.querySelectorAll('.modal').forEach(m => m.style.display = 'none');
         overlay.style.display = 'flex';
-        document.getElementById(modalId).style.display = 'block';
+        const modal = document.getElementById(modalId);
+        modal.style.display = 'block';
+        // Focus the first focusable element inside the modal
+        const focusable = modal.querySelector('input, button, select, textarea, [tabindex]:not([tabindex="-1"])');
+        if (focusable) setTimeout(() => focusable.focus(), 50);
     }
 
     function closeModal(event) {
         if (event && event.target !== event.currentTarget && !event.target.classList.contains('modal-close')) return;
         document.getElementById('modal-overlay').style.display = 'none';
         document.getElementById('modal-overlay').querySelectorAll('.modal').forEach(m => m.style.display = 'none');
+        // Restore focus to the element that opened the modal
+        if (_previousFocusEl) {
+            _previousFocusEl.focus();
+            _previousFocusEl = null;
+        }
     }
 
     function showLogin() { _showModal('modal-login'); }
@@ -385,6 +397,16 @@ const SiteUI = (() => {
     // =========================================
     // Auto-init
     // =========================================
+
+    // Close modals with Escape key
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') {
+            const overlay = document.getElementById('modal-overlay');
+            if (overlay && overlay.style.display !== 'none') {
+                closeModal();
+            }
+        }
+    });
 
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', init);
