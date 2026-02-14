@@ -2,15 +2,18 @@
 # =============================================================
 # STEM School Adventures - Vercel Deployment Setup Script
 # =============================================================
+# Backend: Rust (Axum) with vercel_runtime
+#
 # This script automates:
 #   1. Vercel project linking
 #   2. Vercel Postgres + KV (Redis) creation
 #   3. Database migrations
 #   4. Environment variable configuration
-#   5. Deployment
+#   5. Rust build verification
+#   6. Deployment
 #
 # Prerequisites:
-#   - Node.js 18+
+#   - Rust toolchain: curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
 #   - Vercel CLI: npm i -g vercel
 #   - psql (PostgreSQL client): brew install libpq / apt install postgresql-client
 #   - Logged into Vercel: vercel login
@@ -41,19 +44,15 @@ print_step "Checking prerequisites..."
 
 command -v vercel >/dev/null 2>&1 || { print_err "vercel CLI not found. Install with: npm i -g vercel"; exit 1; }
 command -v psql >/dev/null 2>&1   || { print_err "psql not found. Install postgresql-client for your OS"; exit 1; }
-command -v node >/dev/null 2>&1   || { print_err "node not found. Install Node.js 18+"; exit 1; }
+command -v cargo >/dev/null 2>&1  || { print_err "cargo not found. Install Rust: curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh"; exit 1; }
 
-NODE_VER=$(node -v | cut -d'.' -f1 | tr -d 'v')
-if [ "$NODE_VER" -lt 18 ]; then
-    print_err "Node.js 18+ required (found v${NODE_VER})"
-    exit 1
-fi
-print_ok "All prerequisites met"
+RUST_VER=$(rustc --version | awk '{print $2}')
+print_ok "All prerequisites met (Rust ${RUST_VER})"
 
 # -----------------------------------------------------------
 # Step 1: Link Vercel project
 # -----------------------------------------------------------
-print_step "Step 1/6: Linking Vercel project..."
+print_step "Step 1/7: Linking Vercel project..."
 
 if [ -d ".vercel" ]; then
     print_ok "Already linked (remove .vercel/ to re-link)"
@@ -65,7 +64,7 @@ fi
 # -----------------------------------------------------------
 # Step 2: Create Vercel storage (Postgres + KV)
 # -----------------------------------------------------------
-print_step "Step 2/6: Creating Vercel storage..."
+print_step "Step 2/7: Creating Vercel storage..."
 
 echo ""
 echo "  This will create two storage instances on your Vercel account."
@@ -92,7 +91,7 @@ fi
 # -----------------------------------------------------------
 # Step 3: Pull environment variables
 # -----------------------------------------------------------
-print_step "Step 3/6: Pulling environment variables..."
+print_step "Step 3/7: Pulling environment variables..."
 
 vercel env pull .env.vercel 2>/dev/null || true
 print_ok "Env vars saved to .env.vercel"
@@ -117,7 +116,7 @@ print_ok "Database URL configured"
 # -----------------------------------------------------------
 # Step 4: Run database migrations
 # -----------------------------------------------------------
-print_step "Step 4/6: Running database migrations..."
+print_step "Step 4/7: Running database migrations..."
 
 MIGRATION_DIR="db/migrations"
 MIGRATION_FILES=(
@@ -155,7 +154,7 @@ fi
 # -----------------------------------------------------------
 # Step 5: Set remaining environment variables
 # -----------------------------------------------------------
-print_step "Step 5/6: Configuring environment variables..."
+print_step "Step 5/7: Configuring environment variables..."
 
 echo ""
 echo "  Vercel Postgres and KV vars are set automatically."
@@ -226,17 +225,34 @@ else
 fi
 
 # -----------------------------------------------------------
-# Step 6: Deploy
+# Step 6: Verify Rust build
 # -----------------------------------------------------------
-print_step "Step 6/6: Deploying to Vercel..."
+print_step "Step 6/7: Verifying Rust build..."
 
+echo ""
+read -rp "  Run local cargo check? (y/n): " DO_CHECK
+if [[ "$DO_CHECK" =~ ^[Yy]$ ]]; then
+    print_step "Running cargo check..."
+    (cd server-rs && cargo check --release 2>&1) && {
+        print_ok "Rust build verified"
+    } || {
+        print_warn "cargo check had warnings/errors - Vercel will build remotely"
+    }
+else
+    print_warn "Skipping local check. Vercel will build the Rust binary remotely."
+fi
+
+# -----------------------------------------------------------
+# Step 7: Deploy
+# -----------------------------------------------------------
+print_step "Step 7/7: Deploying to Vercel..."
+
+echo ""
+echo "  Vercel will compile the Rust binary using vercel-rust builder."
+echo "  First deployment may take 3-5 minutes for compilation."
 echo ""
 read -rp "  Deploy to production now? (y/n): " DO_DEPLOY
 if [[ "$DO_DEPLOY" =~ ^[Yy]$ ]]; then
-    print_step "Installing server dependencies..."
-    (cd server && npm install)
-    print_ok "Dependencies installed"
-
     print_step "Deploying to production..."
     DEPLOY_URL=$(vercel --prod 2>&1 | tail -1)
     echo ""
@@ -254,19 +270,28 @@ echo -e "${GREEN}============================================${NC}"
 echo -e "${GREEN}  Setup Complete!${NC}"
 echo -e "${GREEN}============================================${NC}"
 echo ""
+echo "  Backend: Rust (Axum) with vercel_runtime"
+echo ""
 echo "  Next steps:"
-echo "    1. Visit your deployment URL to verify"
+echo "    1. Visit your deployment URL to verify (/health endpoint)"
 echo "    2. Connect your custom domain in Vercel dashboard"
 echo "    3. Set up Stripe webhooks (if using billing):"
 echo "       Endpoint: https://yourdomain.com/api/v1/webhooks/stripe"
-echo "    4. For multiplayer WebSocket, deploy server/ separately"
+echo "    4. For multiplayer WebSocket, deploy separately"
 echo "       to Railway, Fly.io, or Render"
+echo ""
+echo "  Local development:"
+echo "    cd server-rs"
+echo "    cp ../.env.example .env  # Edit with your local config"
+echo "    cargo run                # Starts on http://localhost:3000"
 echo ""
 echo "  Useful commands:"
 echo "    vercel              # Deploy to preview"
 echo "    vercel --prod       # Deploy to production"
 echo "    vercel env ls       # List environment variables"
 echo "    vercel logs         # View deployment logs"
+echo "    cargo test          # Run Rust tests"
+echo "    cargo clippy        # Lint Rust code"
 echo ""
 
 # Clean up temp env file
