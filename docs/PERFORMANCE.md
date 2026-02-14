@@ -267,6 +267,15 @@ if (distSq < radiusSq) { /* collision */ }
 
 ## Backend Performance
 
+### Rust (Axum) Backend
+
+The backend is built in Rust using Axum 0.7 with Tokio async runtime, providing near-native performance and minimal memory overhead compared to the previous Node.js implementation. Key performance characteristics:
+
+- **Zero-cost abstractions**: Rust's ownership model eliminates garbage collection pauses
+- **Async I/O**: Tokio runtime for non-blocking database and Redis operations via SQLx
+- **Lazy initialization**: `OnceCell` for serverless cold-start optimization -- database pools, Redis connections, and Stripe clients are initialized on first use
+- **Tower middleware**: Composable, zero-overhead middleware stack for auth, rate limiting, and tenant resolution
+
 ### Leaderboard Sharding
 
 Leaderboards use sharded Redis sorted sets to distribute load:
@@ -283,9 +292,9 @@ Key format: lb:{tenantId}:{gameId}:shard:{0..7}
 ### Database
 
 - Partitioned `score_history` table by month for efficient pruning
-- Connection pooling: 5-50 connections (scales with load)
+- Connection pooling via SQLx: 5-50 connections (scales with load)
 - Composite indexes for leaderboard queries
-- Lazy initialization for serverless cold-start optimization
+- Lazy initialization via `OnceCell` for serverless cold-start optimization
 
 ### Caching
 
@@ -297,7 +306,7 @@ Key format: lb:{tenantId}:{gameId}:shard:{0..7}
 
 ### API
 
-- gzip compression for all responses
+- gzip compression via tower-http for all responses
 - Rate limiting: 100 req/min global, 30/min for score submission
 - Batch sync endpoint: max 50 operations per request
 

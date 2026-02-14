@@ -28,12 +28,12 @@ STEM School Adventures is a multi-tenant STEM gaming platform designed for schoo
 |---------------|-----------------------------------------|
 | Game Engine   | Phaser 3 (Canvas/WebGL)                 |
 | Frontend UI   | Vanilla JavaScript                      |
-| Backend API   | Express.js (Node.js)                    |
-| Database      | PostgreSQL (Neon / Supabase)            |
+| Backend API   | Rust (Axum 0.7, Tower, Tokio)           |
+| Database      | PostgreSQL (SQLx async driver)          |
 | Cache         | Redis (Upstash / Vercel KV)             |
 | Billing       | Stripe (subscriptions + webhooks)       |
-| Realtime      | WebSocket (native `ws` library)         |
-| Deployment    | Vercel (frontend + API), Railway (WS)   |
+| Realtime      | WebSocket                               |
+| Deployment    | Vercel (vercel-rust serverless)          |
 
 ---
 
@@ -56,11 +56,11 @@ STEM School Adventures is a multi-tenant STEM gaming platform designed for schoo
      (HTTPS)       (WSS)             (HTTPS)      (HTTPS)
           |          |                     |           |
 +------------------------------------------------------------------+
-|                    Express.js Server                             |
+|                  Rust (Axum) Server                              |
 |                                                                  |
 |  +------------+  +-------------+  +------------+  +-----------+  |
 |  |  REST API  |  |  WebSocket  |  | Middleware  |  | Services  |  |
-|  | (16 route  |  |   Server    |  |  Pipeline   |  | (Stripe,  |  |
+|  | (18 route  |  |   Server    |  |  (Tower)    |  | (Stripe,  |  |
 |  |  modules)  |  | (game rooms |  | (auth, rate |  |  leaderb, |  |
 |  |            |  |  matchmake) |  |  limit, etc)|  |  cache)   |  |
 |  +------------+  +-------------+  +------------+  +-----------+  |
@@ -232,52 +232,42 @@ Renders player character sprites from SVG definitions.
 
 ## Backend Architecture
 
-### Server Entry Point (`server/index.js`)
+### Server Entry Point (`server-rs/src/main.rs`)
 
-The Express.js server initialises middleware in a specific order. The ordering is critical: Stripe webhooks require the raw request body, so their route is mounted before the JSON body parser.
+The Rust server uses Axum 0.7 with Tower middleware layers. Application state (database pool, Redis cache, Stripe client, configuration) is initialized lazily via `OnceCell` for fast serverless cold starts. The middleware stack is applied in order via Tower's `ServiceBuilder`.
 
 ```
 Request Lifecycle:
 
-  Incoming Request
+  Incoming Request (via vercel_runtime handler)
        |
        v
-  [1] Helmet (security headers)
+  [1] CORS (Tower layer)
        |
        v
-  [2] Compression (gzip)
+  [2] Compression (tower-http)
        |
        v
-  [3] CORS
+  [3] Rate Limiter (per-IP, Tower layer)
        |
        v
-  [4] Stripe Webhook Routes (raw body - must precede JSON parser)
+  [4] Tenant Resolver (API key or JWT → tenant context)
        |
        v
-  [5] JSON Body Parser (1 MB limit)
+  [5] Locale Detector (Accept-Language)
        |
        v
-  [6] Rate Limiter (100 req/min global)
+  Route Handler → Service Layer → Database (SQLx) / Redis / Stripe
        |
        v
-  [7] Tenant Resolver (API key or JWT → tenant context)
-       |
-       v
-  [8] Request Tracker (monitoring)
-       |
-       v
-  [9] Locale Detector (Accept-Language)
-       |
-       v
-  Route Handler → Service Layer → Database / Redis / Stripe
-       |
-       v
-  [Error Handler] (global catch-all, formatted response)
+  [Error Handler] (custom AppError → JSON response)
 ```
+
+Stripe webhook routes handle raw body verification internally using HMAC signature validation.
 
 ### Route Modules
 
-All routes are prefixed under `/api/v1/`. The platform exposes 16 route modules:
+All routes are prefixed under `/api/v1/`. The platform exposes 18 route modules:
 
 | Route Module     | Path Prefix               | Purpose                                      |
 |------------------|---------------------------|----------------------------------------------|
@@ -300,7 +290,7 @@ All routes are prefixed under `/api/v1/`. The platform exposes 16 route modules:
 
 ### Middleware
 
-#### Rate Limiter (`rateLimiter.js`)
+#### Rate Limiter (`middleware/rate_limit.rs`)
 
 Two tiers of rate limiting protect the API:
 
@@ -309,7 +299,7 @@ Two tiers of rate limiting protect the API:
 | Global (all routes) | 100 requests | 1 minute |
 | Score submission  | 30 requests   | 1 minute |
 
-#### Tenant Resolver (`tenant.js`)
+#### Tenant Resolver (`middleware/tenant.rs`)
 
 Resolves the current tenant from the incoming request.
 
@@ -317,31 +307,31 @@ Resolves the current tenant from the incoming request.
 - Sets `req.tenantId` for downstream use by all route handlers and services.
 - Falls back to the default tenant (`stem_default`) when no tenant is specified.
 
-#### Entitlements (`entitlements.js`)
+#### Entitlements (`middleware/entitlements.rs`)
 
 Feature-gating middleware that checks whether the current tenant's subscription plan includes the requested feature.
 
 - Queries plan entitlements with a **120-second cache** to reduce database load.
 - Returns `403 Forbidden` when the feature is not available on the current plan.
 
-#### Monitoring (`monitoring.js`)
+#### Monitoring (`routes/health.rs`)
 
 Tracks request metrics and WebSocket connection statistics.
 
 - Exposes `/health` for liveness checks and `/metrics` for observability.
 - Records request counts, latencies, and error rates.
 
-#### Error Handler (`errorHandler.js`)
+#### Error Handler (`error.rs`)
 
-Global catch-all that formats all errors into a consistent JSON response shape.
+Custom `AppError` type that implements Axum's `IntoResponse` trait, formatting all errors into a consistent JSON response shape.
 
-#### Localization (`localization.js`)
+#### Localization (`middleware/localization.rs`)
 
 Detects the client's preferred language from the `Accept-Language` header and sets `req.locale` for downstream use.
 
 ### Services
 
-#### Stripe Service (`stripe.js`)
+#### Stripe Service (`services/stripe.rs`)
 
 Manages all interactions with the Stripe API:
 
@@ -350,7 +340,7 @@ Manages all interactions with the Stripe API:
 - **Checkout sessions** - Generates Stripe Checkout URLs for new subscriptions.
 - **Billing portal** - Creates portal sessions for self-service subscription management.
 
-#### Subscription Sync (`subscriptionSync.js`)
+#### Subscription Sync (`services/subscription_sync.rs`)
 
 Processes Stripe webhook events and synchronises subscription state into the database.
 
@@ -370,7 +360,7 @@ Stripe Webhook Event
   Provision / revoke `entitlements`
 ```
 
-#### Leaderboard Service (`leaderboard.js`)
+#### Leaderboard Service (`services/leaderboard.rs`)
 
 High-performance leaderboard engine built on **sharded Redis sorted sets**.
 
@@ -403,7 +393,7 @@ Leaderboard Sharding (8 shards):
 - **getTopK** - Queries all shards, merges results, and returns the top K players.
 - **getApproxRank** - Returns an estimated rank using the player's shard position.
 
-#### Cache Service (`cache.js`)
+#### Cache Service (`cache.rs`)
 
 Thin abstraction over Redis providing key-value and sorted set operations. Used by the leaderboard service and entitlement middleware.
 
@@ -838,7 +828,7 @@ Cache Topology:
 |                      |       |  +---------------------+  |
 |  +----------------+  |       |                           |
 |  | Serverless API |  |       +---------------------------+
-|  | (Express.js)   |  |                    |
+|  | (Rust / Axum)  |  |                    |
 |  +----------------+  |                    |
 |         |            |                    |
 +---------+------------+                    |
@@ -846,18 +836,20 @@ Cache Topology:
           v                                 v
   +---------------+                 +---------------+
   |  PostgreSQL   |                 |     Redis     |
-  |  (Neon /      |                 |  (Upstash /   |
-  |   Supabase)   |                 |   Vercel KV)  |
+  |  (Vercel      |                 |  (Upstash /   |
+  |   Postgres)   |                 |   Vercel KV)  |
   +---------------+                 +---------------+
 ```
 
 ### Deployment Considerations
 
-- **Vercel** hosts the static frontend and the REST API as serverless functions. The serverless model requires **lazy initialisation** of database and Redis connections (connections are established on first use per invocation, not at module load time).
+- **Vercel** hosts the static frontend and the REST API as a serverless Rust function via the `vercel-rust` builder. The serverless model requires **lazy initialisation** of database and Redis connections via `OnceCell` (connections are established on first use per invocation, not at module load time).
 
 - **WebSocket server** requires a persistent process and cannot run on serverless infrastructure. It is deployed separately on Railway, Fly.io, or Render.
 
-- **Connection pooling**: Database connections are pooled with configurable bounds (**5 minimum, 50 maximum**) to balance resource usage with concurrent request handling.
+- **Connection pooling**: Database connections are pooled via SQLx with configurable bounds (**5 minimum, 50 maximum**) to balance resource usage with concurrent request handling.
+
+- **Automated setup**: The `setup.sh` script provisions Vercel Postgres, Vercel KV (Redis), runs migrations, and configures all environment variables.
 
 ---
 
@@ -877,7 +869,7 @@ The platform is designed to scale across several dimensions.
 
 | Mechanism                  | Detail                                                    |
 |----------------------------|-----------------------------------------------------------|
-| Serverless API (Vercel)    | Scales to zero when idle, scales up automatically under load. |
+| Serverless Rust API (Vercel) | Scales to zero when idle, scales up automatically under load. Near-native performance with minimal cold start overhead. |
 | Stateless JWT auth         | No server-side session storage. Any instance can validate any token. Enables horizontal scaling without session affinity. |
 | Redis cache layer          | Absorbs read load for leaderboards and entitlements, protecting PostgreSQL from hot-path queries. |
 

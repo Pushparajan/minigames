@@ -1,6 +1,6 @@
 # Minigames Platform API Reference
 
-Complete API documentation for the Minigames platform. This document covers all REST endpoints, WebSocket protocol, authentication, error handling, and subscription plans.
+Complete API documentation for the Minigames platform. The backend is built with Rust (Axum 0.7) and deployed as a serverless function on Vercel via the `vercel-rust` builder. This document covers all REST endpoints, WebSocket protocol, authentication, error handling, and subscription plans.
 
 ---
 
