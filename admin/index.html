@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>STEM Adventures - Admin Console</title>
+    <link rel="stylesheet" href="admin.css">
+</head>
+<body>
+    <nav class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <h2>STEM Admin</h2>
+        </div>
+        <ul class="nav-links">
+            <li><a href="#dashboard" class="nav-link active" data-page="dashboard">Dashboard</a></li>
+            <li><a href="#queue" class="nav-link" data-page="queue">Moderation Queue</a></li>
+            <li><a href="#reports" class="nav-link" data-page="reports">Reports</a></li>
+            <li><a href="#users" class="nav-link" data-page="users">Users</a></li>
+            <li><a href="#log" class="nav-link" data-page="log">Audit Log</a></li>
+        </ul>
+        <div class="sidebar-footer">
+            <span id="admin-name">Admin</span>
+            <button id="btn-logout" class="btn-sm">Logout</button>
+        </div>
+    </nav>
+
+    <main class="main-content">
+        <!-- Login Screen -->
+        <div id="page-login" class="page active">
+            <div class="login-box">
+                <h1>Admin Login</h1>
+                <form id="login-form">
+                    <input type="email" id="login-email" placeholder="Email" required>
+                    <input type="password" id="login-password" placeholder="Password" required>
+                    <button type="submit" class="btn btn-primary">Sign In</button>
+                    <p id="login-error" class="error-msg"></p>
+                </form>
+            </div>
+        </div>
+
+        <!-- Dashboard -->
+        <div id="page-dashboard" class="page">
+            <h1>Dashboard</h1>
+            <div class="stat-grid" id="stats-grid">
+                <div class="stat-card">
+                    <h3>Pending Comments</h3>
+                    <span class="stat-number" id="stat-pending-comments">-</span>
+                </div>
+                <div class="stat-card">
+                    <h3>Flagged Content</h3>
+                    <span class="stat-number warn" id="stat-flagged">-</span>
+                </div>
+                <div class="stat-card">
+                    <h3>Open Reports</h3>
+                    <span class="stat-number warn" id="stat-open-reports">-</span>
+                </div>
+                <div class="stat-card">
+                    <h3>Total Players</h3>
+                    <span class="stat-number" id="stat-total-players">-</span>
+                </div>
+                <div class="stat-card">
+                    <h3>New Today</h3>
+                    <span class="stat-number" id="stat-new-today">-</span>
+                </div>
+                <div class="stat-card">
+                    <h3>New This Week</h3>
+                    <span class="stat-number" id="stat-new-week">-</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Moderation Queue -->
+        <div id="page-queue" class="page">
+            <h1>Moderation Queue</h1>
+            <div class="toolbar">
+                <select id="queue-filter">
+                    <option value="">All Types</option>
+                    <option value="comment">Comments Only</option>
+                    <option value="review">Reviews Only</option>
+                </select>
+                <button class="btn btn-sm" id="btn-refresh-queue">Refresh</button>
+            </div>
+            <div class="content-list" id="queue-list">
+                <p class="empty-state">Loading...</p>
+            </div>
+        </div>
+
+        <!-- Reports -->
+        <div id="page-reports" class="page">
+            <h1>Content Reports</h1>
+            <div class="toolbar">
+                <select id="report-status-filter">
+                    <option value="open">Open</option>
+                    <option value="resolved">Resolved</option>
+                    <option value="dismissed">Dismissed</option>
+                </select>
+                <button class="btn btn-sm" id="btn-refresh-reports">Refresh</button>
+            </div>
+            <div class="content-list" id="reports-list">
+                <p class="empty-state">Loading...</p>
+            </div>
+        </div>
+
+        <!-- Users -->
+        <div id="page-users" class="page">
+            <h1>User Management</h1>
+            <div class="toolbar">
+                <input type="text" id="user-search" placeholder="Search by name or email..." class="search-input">
+                <button class="btn btn-sm" id="btn-search-users">Search</button>
+            </div>
+            <div class="content-list" id="users-list">
+                <p class="empty-state">Search for users...</p>
+            </div>
+            <!-- User Detail Panel -->
+            <div id="user-detail" class="detail-panel" style="display:none;">
+                <button class="btn btn-sm btn-close" id="btn-close-detail">Close</button>
+                <div id="user-detail-content"></div>
+            </div>
+        </div>
+
+        <!-- Audit Log -->
+        <div id="page-log" class="page">
+            <h1>Audit Log</h1>
+            <div class="content-list" id="log-list">
+                <p class="empty-state">Loading...</p>
+            </div>
+            <button class="btn btn-sm" id="btn-load-more-log">Load More</button>
+        </div>
+    </main>
+
+    <!-- Action Modal -->
+    <div id="action-modal" class="modal" style="display:none;">
+        <div class="modal-content">
+            <h2 id="modal-title">Action</h2>
+            <p id="modal-body"></p>
+            <textarea id="modal-reason" placeholder="Reason (optional)"></textarea>
+            <div class="modal-actions">
+                <button class="btn btn-danger" id="modal-confirm">Confirm</button>
+                <button class="btn btn-secondary" id="modal-cancel">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="admin.js"></script>
+</body>
+</html>
