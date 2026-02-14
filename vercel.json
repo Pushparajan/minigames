@@ -3,7 +3,7 @@
 
   "builds": [
     {
-      "src": "server-rs/Cargo.toml",
+      "src": "server-rs/src/main.rs",
       "use": "vercel-rust"
     }
   ],
@@ -11,15 +11,15 @@
   "rewrites": [
     {
       "source": "/api/v1/:path*",
-      "destination": "/server-rs"
+      "destination": "/server-rs/src/main"
     },
     {
       "source": "/health",
-      "destination": "/server-rs"
+      "destination": "/server-rs/src/main"
     },
     {
       "source": "/metrics",
-      "destination": "/server-rs"
+      "destination": "/server-rs/src/main"
     },
     {
       "source": "/admin",

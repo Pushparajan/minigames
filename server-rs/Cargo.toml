@@ -5,7 +5,7 @@ edition = "2021"
 rust-version = "1.75"
 
 [[bin]]
-name = "handler"
+name = "main"
 path = "src/main.rs"
 
 [dependencies]
