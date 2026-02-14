@@ -1,0 +1,45 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 64" width="48" height="64">
+  <!-- Arvi 9000: Small hovering AI, sleek white-blue body, digital face screen, antenna, soft glow -->
+  <!-- Hover glow underneath -->
+  <ellipse cx="24" cy="60" rx="12" ry="3" fill="#2196F3" opacity="0.15"/>
+  <ellipse cx="24" cy="58" rx="8" ry="2" fill="#64B5F6" opacity="0.2"/>
+  <!-- Main body -->
+  <ellipse cx="24" cy="36" rx="18" ry="22" fill="url(#arviGrad)"/>
+  <defs>
+    <linearGradient id="arviGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#ECEFF1"/>
+      <stop offset="50%" stop-color="#CFD8DC"/>
+      <stop offset="100%" stop-color="#B0BEC5"/>
+    </linearGradient>
+  </defs>
+  <!-- Body highlight -->
+  <ellipse cx="18" cy="28" rx="8" ry="10" fill="white" opacity="0.2"/>
+  <!-- Blue accent stripe -->
+  <ellipse cx="24" cy="36" rx="16" ry="18" fill="none" stroke="#2196F3" stroke-width="1" opacity="0.4"/>
+  <path d="M10,44 Q24,52 38,44" fill="none" stroke="#2196F3" stroke-width="1.5" opacity="0.3"/>
+  <!-- Face screen area -->
+  <rect x="12" y="24" width="24" height="18" rx="6" fill="#1A237E" opacity="0.9"/>
+  <!-- Digital face on screen -->
+  <!-- Eyes (expressive digital) -->
+  <rect x="16" y="28" width="5" height="6" rx="1" fill="#64B5F6"/>
+  <rect x="27" y="28" width="5" height="6" rx="1" fill="#64B5F6"/>
+  <!-- Eye highlights -->
+  <rect x="17" y="29" width="2" height="2" fill="white" opacity="0.7"/>
+  <rect x="28" y="29" width="2" height="2" fill="white" opacity="0.7"/>
+  <!-- Digital smile -->
+  <rect x="18" y="37" width="2" height="2" fill="#64B5F6"/>
+  <rect x="20" y="39" width="8" height="1" fill="#64B5F6"/>
+  <rect x="28" y="37" width="2" height="2" fill="#64B5F6"/>
+  <!-- Antenna -->
+  <line x1="24" y1="14" x2="24" y2="6" stroke="#90A4AE" stroke-width="1.5"/>
+  <circle cx="24" cy="4" r="3" fill="#2196F3"/>
+  <circle cx="24" cy="4" r="1.5" fill="#64B5F6"/>
+  <!-- Antenna glow -->
+  <circle cx="24" cy="4" r="5" fill="none" stroke="#2196F3" stroke-width="0.5" opacity="0.3"/>
+  <!-- Side details -->
+  <circle cx="8" cy="36" r="2" fill="#90A4AE"/>
+  <circle cx="40" cy="36" r="2" fill="#90A4AE"/>
+  <!-- Bottom hover jets -->
+  <rect x="18" y="54" width="4" height="3" rx="1" fill="#64B5F6" opacity="0.5"/>
+  <rect x="26" y="54" width="4" height="3" rx="1" fill="#64B5F6" opacity="0.5"/>
+</svg>

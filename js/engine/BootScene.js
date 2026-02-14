@@ -3,7 +3,7 @@
  * ==============
  * Universal boot scene that initializes shared resources and
  * displays a brief loading screen before transitioning to the
- * selected game scene.
+ * selected game scene. Preloads all SVG character sprites.
  */
 
 class BootScene extends Phaser.Scene {
@@ -14,6 +14,11 @@ class BootScene extends Phaser.Scene {
     init(data) {
         /** @type {string} The game ID to launch after boot */
         this.targetGameId = data.gameId || null;
+    }
+
+    preload() {
+        // Preload all character SVG sprites
+        CharacterFactory.preloadAll(this);
     }
 
     create() {

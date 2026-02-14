@@ -1,17 +1,43 @@
 /**
  * CharacterFactory.js
  * =====================
- * Renders STEM School Adventures characters as Canvas-drawn placeholders.
- * Each character is drawn with identifiable colors, shapes, and icons
- * based on their visual prompt descriptions.
+ * Renders STEM School Adventures characters using inline SVG sprites
+ * based on the visual prompt descriptions. Falls back to Canvas-drawn
+ * placeholders if SVGs are not loaded.
  */
 
 const CharacterFactory = (() => {
     'use strict';
 
     /**
+     * SVG file paths for each character.
+     * These are loaded as Phaser textures via Image elements.
+     */
+    const SVG_PATHS = {
+        guha: 'assets/svg/guha.svg',
+        nadia: 'assets/svg/nadia.svg',
+        logicron: 'assets/svg/logicron.svg',
+        andres: 'assets/svg/andres.svg',
+        dev: 'assets/svg/dev.svg',
+        sofia: 'assets/svg/sofia.svg',
+        rex: 'assets/svg/rex.svg',
+        maya: 'assets/svg/maya.svg',
+        zack: 'assets/svg/zack.svg',
+        grandpaVidur: 'assets/svg/grandpaVidur.svg',
+        arvi: 'assets/svg/arvi.svg',
+        pancho: 'assets/svg/pancho.svg'
+    };
+
+    /** Cache of loaded SVG data URIs */
+    const _svgCache = {};
+
+    /** Track which SVGs have been loaded into Phaser */
+    const _textureLoaded = {};
+
+    /**
      * Character definition table.
-     * Each entry contains drawing instructions for Canvas-based placeholders.
+     * Each entry contains drawing instructions for Canvas-based placeholders
+     * and references to SVG sprite files.
      */
     const CHARACTERS = {
         guha: {
@@ -149,8 +175,23 @@ const CharacterFactory = (() => {
     };
 
     /**
-     * Draw a character placeholder onto a Phaser Graphics object or return
-     * a texture key after generating one.
+     * Preload all SVG character sprites into a Phaser scene's loader.
+     * Call this from a scene's preload() method.
+     *
+     * @param {Phaser.Scene} scene - The scene to preload into.
+     */
+    function preloadAll(scene) {
+        Object.entries(SVG_PATHS).forEach(([id, path]) => {
+            const key = `svg_${id}`;
+            if (!scene.textures.exists(key)) {
+                scene.load.svg(key, path);
+            }
+        });
+    }
+
+    /**
+     * Create a character texture. Prefers SVG sprite if loaded,
+     * otherwise falls back to Canvas-drawn placeholder.
      *
      * @param {Phaser.Scene} scene - The active Phaser scene.
      * @param {string} characterId - Key from CHARACTERS table.
@@ -164,6 +205,13 @@ const CharacterFactory = (() => {
             return null;
         }
 
+        // Try SVG texture first
+        const svgKey = `svg_${characterId}`;
+        if (scene.textures.exists(svgKey)) {
+            return svgKey;
+        }
+
+        // Fallback: Canvas-drawn placeholder
         const key = `char_${characterId}_${scale}`;
         if (scene.textures.exists(key)) return key;
 
@@ -366,5 +414,5 @@ const CharacterFactory = (() => {
         return Object.keys(CHARACTERS);
     }
 
-    return { createTexture, createBallTexture, getInfo, getAllIds, CHARACTERS };
+    return { createTexture, createBallTexture, preloadAll, getInfo, getAllIds, CHARACTERS, SVG_PATHS };
 })();

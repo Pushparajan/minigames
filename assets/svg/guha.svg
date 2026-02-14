@@ -1,0 +1,55 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 96" width="64" height="96">
+  <!-- Guha: 10yo South Asian boy, red hoodie, lightning bolt, magnifying glass -->
+  <!-- Sneakers -->
+  <rect x="14" y="84" width="14" height="10" rx="3" fill="#546E7A"/>
+  <rect x="36" y="84" width="14" height="10" rx="3" fill="#546E7A"/>
+  <!-- Cargo shorts -->
+  <rect x="16" y="64" width="12" height="22" rx="2" fill="#8D6E63"/>
+  <rect x="36" y="64" width="12" height="22" rx="2" fill="#8D6E63"/>
+  <!-- Red hoodie body -->
+  <rect x="12" y="38" width="40" height="30" rx="5" fill="#E53935"/>
+  <!-- Hoodie hood outline -->
+  <path d="M18,38 Q32,28 46,38" fill="none" stroke="#C62828" stroke-width="2"/>
+  <!-- Lightning bolt pattern on hoodie -->
+  <polygon points="28,44 32,50 30,50 34,58 29,52 31,52 27,44" fill="#FDD835" opacity="0.8"/>
+  <!-- Arms -->
+  <rect x="4" y="42" width="10" height="22" rx="4" fill="#E53935"/>
+  <rect x="50" y="42" width="10" height="22" rx="4" fill="#E53935"/>
+  <!-- Hands (skin) -->
+  <circle cx="9" cy="66" r="5" fill="#C68642"/>
+  <circle cx="55" cy="66" r="5" fill="#C68642"/>
+  <!-- Magnifying glass in right hand -->
+  <circle cx="57" cy="60" r="6" fill="none" stroke="#FFD54F" stroke-width="2"/>
+  <line x1="61" y1="64" x2="60" y2="68" stroke="#FFD54F" stroke-width="2"/>
+  <circle cx="57" cy="60" r="4" fill="#E3F2FD" opacity="0.4"/>
+  <!-- Neck -->
+  <rect x="26" y="32" width="12" height="8" rx="3" fill="#C68642"/>
+  <!-- Head -->
+  <ellipse cx="32" cy="22" rx="16" ry="18" fill="#C68642"/>
+  <!-- Messy black hair -->
+  <path d="M16,18 Q18,4 32,2 Q46,4 48,18 L46,14 Q40,6 32,5 Q24,6 18,14 Z" fill="#212121"/>
+  <path d="M18,14 Q16,10 20,8" fill="#212121" stroke="#212121" stroke-width="2"/>
+  <path d="M46,14 Q48,10 44,7" fill="#212121" stroke="#212121" stroke-width="2"/>
+  <path d="M14,20 Q15,12 20,10" fill="#212121" stroke="#212121" stroke-width="3"/>
+  <path d="M50,20 Q49,12 44,10" fill="#212121" stroke="#212121" stroke-width="3"/>
+  <!-- Messy tufts -->
+  <path d="M24,4 Q22,0 26,2" fill="#212121"/>
+  <path d="M38,3 Q42,0 40,4" fill="#212121"/>
+  <!-- Eyes (bright, curious) -->
+  <ellipse cx="25" cy="22" rx="4" ry="4.5" fill="white"/>
+  <ellipse cx="39" cy="22" rx="4" ry="4.5" fill="white"/>
+  <circle cx="26" cy="22" r="2.5" fill="#3E2723"/>
+  <circle cx="40" cy="22" r="2.5" fill="#3E2723"/>
+  <circle cx="27" cy="21" r="1" fill="white"/>
+  <circle cx="41" cy="21" r="1" fill="white"/>
+  <!-- Eyebrows (adventurous expression) -->
+  <path d="M21,17 Q25,15 29,17" fill="none" stroke="#212121" stroke-width="1.5"/>
+  <path d="M35,17 Q39,15 43,17" fill="none" stroke="#212121" stroke-width="1.5"/>
+  <!-- Nose -->
+  <ellipse cx="32" cy="26" rx="2" ry="1.5" fill="#A0522D"/>
+  <!-- Mouth (adventurous grin) -->
+  <path d="M26,30 Q32,35 38,30" fill="none" stroke="#5D4037" stroke-width="1.5"/>
+  <!-- Ears -->
+  <ellipse cx="16" cy="24" rx="3" ry="4" fill="#C68642"/>
+  <ellipse cx="48" cy="24" rx="3" ry="4" fill="#C68642"/>
+</svg>

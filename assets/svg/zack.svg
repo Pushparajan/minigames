@@ -1,0 +1,77 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 96" width="64" height="96">
+  <!-- Zack: 10yo boy, spiky brown hair, hoodie with pixel patterns, laptop projecting holographic code -->
+  <!-- Sneakers -->
+  <rect x="14" y="84" width="14" height="10" rx="3" fill="#37474F"/>
+  <rect x="36" y="84" width="14" height="10" rx="3" fill="#37474F"/>
+  <rect x="16" y="86" width="4" height="2" fill="#00E676"/>
+  <rect x="38" y="86" width="4" height="2" fill="#00E676"/>
+  <!-- Pants (dark) -->
+  <rect x="16" y="64" width="12" height="22" rx="2" fill="#263238"/>
+  <rect x="36" y="64" width="12" height="22" rx="2" fill="#263238"/>
+  <!-- Dark hoodie body -->
+  <rect x="12" y="38" width="40" height="28" rx="5" fill="#424242"/>
+  <!-- Pixel patterns on hoodie -->
+  <rect x="16" y="44" width="4" height="4" fill="#00E676" opacity="0.7"/>
+  <rect x="22" y="44" width="4" height="4" fill="#76FF03" opacity="0.5"/>
+  <rect x="16" y="50" width="4" height="4" fill="#76FF03" opacity="0.5"/>
+  <rect x="22" y="50" width="4" height="4" fill="#00E676" opacity="0.6"/>
+  <rect x="38" y="46" width="4" height="4" fill="#00E676" opacity="0.6"/>
+  <rect x="44" y="46" width="4" height="4" fill="#76FF03" opacity="0.4"/>
+  <rect x="38" y="52" width="4" height="4" fill="#76FF03" opacity="0.4"/>
+  <rect x="44" y="52" width="4" height="4" fill="#00E676" opacity="0.5"/>
+  <!-- Hoodie hood -->
+  <path d="M18,38 Q32,30 46,38" fill="none" stroke="#333333" stroke-width="2"/>
+  <!-- Hoodie strings -->
+  <line x1="28" y1="38" x2="26" y2="46" stroke="#666666" stroke-width="1"/>
+  <line x1="36" y1="38" x2="38" y2="46" stroke="#666666" stroke-width="1"/>
+  <!-- Arms -->
+  <rect x="2" y="42" width="12" height="20" rx="4" fill="#424242"/>
+  <rect x="50" y="42" width="12" height="20" rx="4" fill="#424242"/>
+  <!-- Hands -->
+  <circle cx="8" cy="64" r="5" fill="#E8C4A0"/>
+  <circle cx="56" cy="64" r="5" fill="#E8C4A0"/>
+  <!-- Laptop in hands -->
+  <rect x="2" y="56" width="16" height="10" rx="2" fill="#37474F"/>
+  <rect x="3" y="57" width="14" height="8" rx="1" fill="#263238"/>
+  <!-- Screen glow -->
+  <rect x="4" y="58" width="12" height="6" rx="1" fill="#00E676" opacity="0.3"/>
+  <!-- Code lines on screen -->
+  <rect x="5" y="59" width="8" height="1" fill="#00E676" opacity="0.6"/>
+  <rect x="5" y="61" width="6" height="1" fill="#76FF03" opacity="0.5"/>
+  <rect x="5" y="63" width="9" height="1" fill="#00E676" opacity="0.4"/>
+  <!-- Holographic projection from laptop -->
+  <rect x="6" y="48" width="6" height="1" fill="#00E676" opacity="0.3"/>
+  <rect x="4" y="50" width="8" height="1" fill="#76FF03" opacity="0.25"/>
+  <rect x="8" y="52" width="5" height="1" fill="#00E676" opacity="0.2"/>
+  <text x="3" y="46" font-size="5" fill="#00E676" opacity="0.4" font-family="monospace">{}</text>
+  <!-- Neck -->
+  <rect x="26" y="32" width="12" height="8" rx="3" fill="#E8C4A0"/>
+  <!-- Head -->
+  <ellipse cx="32" cy="18" rx="15" ry="16" fill="#E8C4A0"/>
+  <!-- Spiky brown hair -->
+  <polygon points="18,10 14,2 22,8" fill="#6D4C41"/>
+  <polygon points="26,6 24,0 30,4" fill="#795548"/>
+  <polygon points="34,4 36,-2 38,4" fill="#6D4C41"/>
+  <polygon points="42,6 46,0 44,10" fill="#795548"/>
+  <polygon points="22,8 16,4 20,12" fill="#795548"/>
+  <polygon points="38,5 44,1 42,8" fill="#6D4C41"/>
+  <path d="M17,16 Q20,4 32,2 Q44,4 47,16" fill="#795548"/>
+  <!-- Energetic eyes -->
+  <ellipse cx="26" cy="18" rx="4" ry="4.5" fill="white"/>
+  <ellipse cx="38" cy="18" rx="4" ry="4.5" fill="white"/>
+  <circle cx="27" cy="18" r="2.5" fill="#4E342E"/>
+  <circle cx="39" cy="18" r="2.5" fill="#4E342E"/>
+  <circle cx="28" cy="17" r="1" fill="white"/>
+  <circle cx="40" cy="17" r="1" fill="white"/>
+  <!-- Energetic eyebrows -->
+  <path d="M22,13 Q26,11 30,13" fill="none" stroke="#5D4037" stroke-width="1.5"/>
+  <path d="M34,13 Q38,11 42,13" fill="none" stroke="#5D4037" stroke-width="1.5"/>
+  <!-- Nose -->
+  <ellipse cx="32" cy="22" rx="2" ry="1.5" fill="#D4A880"/>
+  <!-- Energetic grin -->
+  <path d="M25,26 Q32,32 39,26" fill="none" stroke="#5D4037" stroke-width="1.5"/>
+  <path d="M27,26 Q32,30 37,26" fill="white" opacity="0.8"/>
+  <!-- Ears -->
+  <ellipse cx="17" cy="20" rx="2.5" ry="3.5" fill="#E8C4A0"/>
+  <ellipse cx="47" cy="20" rx="2.5" ry="3.5" fill="#E8C4A0"/>
+</svg>

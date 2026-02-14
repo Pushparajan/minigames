@@ -1,0 +1,57 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 68 104" width="68" height="104">
+  <!-- Dev: Wise mentor, salt-and-pepper hair, calm eyes, kurta-style shirt, holographic geometry -->
+  <!-- Sandals -->
+  <rect x="16" y="92" width="14" height="8" rx="2" fill="#795548"/>
+  <rect x="38" y="92" width="14" height="8" rx="2" fill="#795548"/>
+  <!-- Loose pants -->
+  <rect x="18" y="68" width="12" height="26" rx="3" fill="#EFEBE9"/>
+  <rect x="38" y="68" width="12" height="26" rx="3" fill="#EFEBE9"/>
+  <!-- Kurta-style shirt -->
+  <rect x="12" y="36" width="44" height="36" rx="5" fill="#FFF8E1"/>
+  <!-- Kurta neckline (V-shape) -->
+  <path d="M28,36 L34,48 L40,36" fill="none" stroke="#FFE082" stroke-width="1.5"/>
+  <!-- Faint glowing geometric patterns -->
+  <polygon points="20,50 26,44 32,50 26,56" fill="none" stroke="#FFD54F" stroke-width="0.8" opacity="0.5"/>
+  <circle cx="44" cy="54" r="5" fill="none" stroke="#FFD54F" stroke-width="0.8" opacity="0.5"/>
+  <polygon points="38,62 42,58 46,62" fill="none" stroke="#FFD54F" stroke-width="0.8" opacity="0.4"/>
+  <!-- Kurta border -->
+  <rect x="12" y="68" width="44" height="4" rx="1" fill="#FFE082" opacity="0.6"/>
+  <!-- Arms -->
+  <rect x="4" y="40" width="10" height="24" rx="4" fill="#FFF8E1"/>
+  <rect x="54" y="40" width="10" height="24" rx="4" fill="#FFF8E1"/>
+  <!-- Hands -->
+  <circle cx="9" cy="66" r="5" fill="#D7B896"/>
+  <circle cx="59" cy="66" r="5" fill="#D7B896"/>
+  <!-- Neck -->
+  <rect x="28" y="30" width="12" height="8" rx="3" fill="#D7B896"/>
+  <!-- Head -->
+  <ellipse cx="34" cy="19" rx="16" ry="17" fill="#D7B896"/>
+  <!-- Salt-and-pepper hair -->
+  <path d="M18,16 Q20,4 34,2 Q48,4 50,16 L48,12 Q42,5 34,4 Q26,5 20,12 Z" fill="#9E9E9E"/>
+  <path d="M22,10 Q26,6 30,4" fill="none" stroke="#616161" stroke-width="1.5"/>
+  <path d="M46,10 Q42,6 38,4" fill="none" stroke="#BDBDBD" stroke-width="1.5"/>
+  <path d="M18,16 Q16,10 20,8" fill="none" stroke="#9E9E9E" stroke-width="2"/>
+  <path d="M50,16 Q52,10 48,8" fill="none" stroke="#757575" stroke-width="2"/>
+  <!-- Calm eyes -->
+  <ellipse cx="28" cy="20" rx="3.5" ry="3.5" fill="white"/>
+  <ellipse cx="40" cy="20" rx="3.5" ry="3.5" fill="white"/>
+  <circle cx="28" cy="20" r="2" fill="#5D4037"/>
+  <circle cx="40" cy="20" r="2" fill="#5D4037"/>
+  <circle cx="29" cy="19" r="0.8" fill="white"/>
+  <circle cx="41" cy="19" r="0.8" fill="white"/>
+  <!-- Calm eyebrows (level) -->
+  <path d="M24,16 Q28,15 32,16" fill="none" stroke="#757575" stroke-width="1.2"/>
+  <path d="M36,16 Q40,15 44,16" fill="none" stroke="#757575" stroke-width="1.2"/>
+  <!-- Nose -->
+  <ellipse cx="34" cy="24" rx="2" ry="1.5" fill="#C4A070"/>
+  <!-- Gentle wise smile -->
+  <path d="M28,28 Q34,32 40,28" fill="none" stroke="#8D6E63" stroke-width="1.2"/>
+  <!-- Ears -->
+  <ellipse cx="18" cy="22" rx="3" ry="4" fill="#D7B896"/>
+  <ellipse cx="50" cy="22" rx="3" ry="4" fill="#D7B896"/>
+  <!-- Floating holographic numbers and shapes -->
+  <text x="2" y="28" font-size="8" fill="#FFD54F" opacity="0.5" font-family="sans-serif">3.14</text>
+  <text x="52" y="14" font-size="7" fill="#FFD54F" opacity="0.4" font-family="sans-serif">∞</text>
+  <polygon points="58,32 62,26 66,32" fill="none" stroke="#FFD54F" stroke-width="0.8" opacity="0.4"/>
+  <circle cx="4" cy="38" r="3" fill="none" stroke="#FFD54F" stroke-width="0.8" opacity="0.4"/>
+</svg>

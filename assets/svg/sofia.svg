@@ -1,0 +1,72 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 96" width="64" height="96">
+  <!-- Sofia: 11yo girl, short dark hair, tool belt, light blue shirt, goggles on forehead, wrench+blueprint -->
+  <!-- Boots -->
+  <rect x="14" y="84" width="14" height="10" rx="3" fill="#5D4037"/>
+  <rect x="36" y="84" width="14" height="10" rx="3" fill="#5D4037"/>
+  <rect x="14" y="84" width="14" height="3" rx="1" fill="#795548"/>
+  <rect x="36" y="84" width="14" height="3" rx="1" fill="#795548"/>
+  <!-- Pants -->
+  <rect x="16" y="64" width="12" height="22" rx="2" fill="#455A64"/>
+  <rect x="36" y="64" width="12" height="22" rx="2" fill="#455A64"/>
+  <!-- Light blue shirt -->
+  <rect x="12" y="38" width="40" height="28" rx="4" fill="#64B5F6"/>
+  <!-- Shirt collar -->
+  <path d="M24,38 L28,42 L32,38 L36,42 L40,38" fill="none" stroke="#42A5F5" stroke-width="1"/>
+  <!-- Tool belt -->
+  <rect x="10" y="60" width="44" height="8" rx="2" fill="#795548"/>
+  <rect x="10" y="60" width="44" height="2" rx="1" fill="#8D6E63"/>
+  <!-- Belt buckle -->
+  <rect x="28" y="61" width="8" height="6" rx="1" fill="#FFD54F"/>
+  <!-- Tools on belt -->
+  <rect x="14" y="56" width="3" height="12" rx="1" fill="#9E9E9E"/>
+  <rect x="46" y="57" width="3" height="10" rx="1" fill="#9E9E9E"/>
+  <rect x="42" y="58" width="3" height="8" rx="1" fill="#FF7043"/>
+  <!-- Arms -->
+  <rect x="2" y="42" width="12" height="20" rx="4" fill="#64B5F6"/>
+  <rect x="50" y="42" width="12" height="20" rx="4" fill="#64B5F6"/>
+  <!-- Hands -->
+  <circle cx="8" cy="64" r="5" fill="#E8C4A0"/>
+  <circle cx="56" cy="64" r="5" fill="#E8C4A0"/>
+  <!-- Left hand: wrench -->
+  <rect x="2" y="56" width="4" height="14" rx="1" fill="#78909C"/>
+  <circle cx="4" cy="56" r="4" fill="none" stroke="#78909C" stroke-width="2"/>
+  <!-- Right hand: blueprint (rolled) -->
+  <rect x="52" y="56" width="10" height="6" rx="2" fill="#BBDEFB"/>
+  <line x1="54" y1="57" x2="54" y2="61" stroke="#90CAF9" stroke-width="0.5"/>
+  <line x1="56" y1="57" x2="56" y2="61" stroke="#90CAF9" stroke-width="0.5"/>
+  <!-- Neck -->
+  <rect x="26" y="32" width="12" height="8" rx="3" fill="#E8C4A0"/>
+  <!-- Head -->
+  <ellipse cx="32" cy="20" rx="15" ry="16" fill="#E8C4A0"/>
+  <!-- Short dark hair -->
+  <path d="M17,18 Q18,6 32,4 Q46,6 47,18 L45,14 Q40,7 32,6 Q24,7 19,14 Z" fill="#37474F"/>
+  <path d="M17,18 Q15,14 18,10" fill="none" stroke="#37474F" stroke-width="3"/>
+  <path d="M47,18 Q49,14 46,10" fill="none" stroke="#37474F" stroke-width="3"/>
+  <!-- Short bob cut sides -->
+  <rect x="15" y="14" width="4" height="10" rx="2" fill="#37474F"/>
+  <rect x="45" y="14" width="4" height="10" rx="2" fill="#37474F"/>
+  <!-- Goggles on forehead -->
+  <rect x="20" y="10" width="24" height="6" rx="3" fill="#FF7043" opacity="0.9"/>
+  <circle cx="28" cy="13" r="4" fill="none" stroke="#BF360C" stroke-width="1.5"/>
+  <circle cx="36" cy="13" r="4" fill="none" stroke="#BF360C" stroke-width="1.5"/>
+  <circle cx="28" cy="13" r="2.5" fill="#E3F2FD" opacity="0.4"/>
+  <circle cx="36" cy="13" r="2.5" fill="#E3F2FD" opacity="0.4"/>
+  <line x1="32" y1="13" x2="32" y2="13" stroke="#BF360C" stroke-width="1.5"/>
+  <!-- Determined eyes -->
+  <ellipse cx="26" cy="20" rx="3.5" ry="4" fill="white"/>
+  <ellipse cx="38" cy="20" rx="3.5" ry="4" fill="white"/>
+  <circle cx="27" cy="20" r="2.2" fill="#4E342E"/>
+  <circle cx="39" cy="20" r="2.2" fill="#4E342E"/>
+  <circle cx="28" cy="19" r="0.8" fill="white"/>
+  <circle cx="40" cy="19" r="0.8" fill="white"/>
+  <!-- Determined eyebrows -->
+  <path d="M22,16 Q26,14.5 30,16" fill="none" stroke="#37474F" stroke-width="1.5"/>
+  <path d="M34,16 Q38,14.5 42,16" fill="none" stroke="#37474F" stroke-width="1.5"/>
+  <!-- Nose -->
+  <ellipse cx="32" cy="24" rx="2" ry="1.5" fill="#D4A880"/>
+  <!-- Determined smile -->
+  <path d="M27,28 Q32,31 37,28" fill="none" stroke="#8D6E63" stroke-width="1.2"/>
+  <!-- Ears -->
+  <ellipse cx="17" cy="22" rx="2.5" ry="3.5" fill="#E8C4A0"/>
+  <ellipse cx="47" cy="22" rx="2.5" ry="3.5" fill="#E8C4A0"/>
+</svg>
