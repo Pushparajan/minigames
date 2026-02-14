@@ -26,6 +26,8 @@ const organisationRoutes = require('./routes/organisations');
 const webhookRoutes = require('./routes/webhooks');
 const commentRoutes = require('./routes/comments');
 const adminRoutes = require('./routes/admin');
+const multiplayerRoutes = require('./routes/multiplayer');
+const wsServer = require('./multiplayer/wsServer');
 
 const db = require('./models/db');
 const cache = require('./services/cache');
@@ -101,6 +103,7 @@ app.use('/api/v1/billing', authenticate, billingRoutes);
 app.use('/api/v1/organisations', authenticate, organisationRoutes);
 app.use('/api/v1/comments', commentRoutes);
 app.use('/api/v1/admin', authenticate, adminRoutes);
+app.use('/api/v1/multiplayer', authenticate, multiplayerRoutes);
 
 // =========================================
 // Error Handling
@@ -116,8 +119,12 @@ if (require.main === module) {
     (async () => {
         try {
             await ensureConnections();
-            app.listen(config.port, () => {
+            const http = require('http');
+            const server = http.createServer(app);
+            wsServer.attach(server);
+            server.listen(config.port, () => {
                 console.log(`STEM Adventures API running on port ${config.port} [${config.nodeEnv}]`);
+                console.log(`Multiplayer WebSocket server on ws://localhost:${config.port}/ws`);
             });
         } catch (err) {
             console.error('Failed to start server:', err);

@@ -49,6 +49,7 @@ Connect to your PostgreSQL database and run the migrations in order:
 psql $DATABASE_URL -f db/migrations/001_initial_schema.sql
 psql $DATABASE_URL -f db/migrations/002_subscriptions_billing.sql
 psql $DATABASE_URL -f db/migrations/003_comments_reviews_moderation.sql
+psql $DATABASE_URL -f db/migrations/004_multiplayer.sql
 ```
 
 ### 3. Configure environment variables
@@ -147,6 +148,12 @@ Update the `STRIPE_WEBHOOK_SECRET` environment variable with the signing secret 
 | Custom domain | `minigames.cool` (GoDaddy DNS → Vercel) |
 
 The Express app uses lazy initialization for database and Redis connections, so cold starts only connect on the first request. Connections persist across warm function invocations.
+
+### Multiplayer (WebSocket server)
+
+The multiplayer system uses WebSockets for real-time game communication. In local development, the WebSocket server attaches automatically to the Express HTTP server on `/ws`.
+
+For production, WebSockets require a persistent server (not serverless). Deploy the server to a platform that supports long-lived connections (e.g. Railway, Fly.io, Render, or a VPS) and point the `WS_URL` environment variable to it. The Vercel deployment handles the REST API and static frontend; the WebSocket server runs separately.
 
 ## Local Development
 

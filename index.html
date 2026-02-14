@@ -21,6 +21,7 @@
             </div>
             <!-- Logged in state -->
             <div id="nav-user" class="nav-auth" style="display:none;">
+                <button class="nav-link" onclick="LobbyUI.show()">Multiplayer</button>
                 <button id="nav-billing-btn" class="nav-link" onclick="SiteUI.showBilling()">Billing</button>
                 <span id="nav-username" class="nav-username"></span>
                 <button class="btn-outline btn-sm" onclick="SiteUI.logout()">Log Out</button>
@@ -150,6 +151,69 @@
             </div>
             <button class="modal-close" onclick="SiteUI.closeModal()">&times;</button>
         </div>
+
+        <!-- Multiplayer Lobby Modal -->
+        <div id="modal-lobby" class="modal modal-wide" style="display:none;">
+            <h2>Multiplayer Lobby</h2>
+            <div id="lobby-content">
+                <!-- Lobby List View -->
+                <div id="lobby-list">
+                    <div class="lobby-actions">
+                        <select id="lobby-game-filter" onchange="LobbyUI.refresh()">
+                            <option value="">All Games</option>
+                        </select>
+                        <button class="btn-primary" onclick="LobbyUI.showCreate()">Create Room</button>
+                        <button class="btn-outline" onclick="LobbyUI.refresh()">Refresh</button>
+                    </div>
+                    <div id="lobby-rooms" class="lobby-rooms">
+                        <p class="lobby-empty">No rooms available. Create one or use Quick Match!</p>
+                    </div>
+                </div>
+
+                <!-- Create Room View -->
+                <div id="lobby-create" style="display:none;">
+                    <form onsubmit="LobbyUI.handleCreate(event)">
+                        <label>Game</label>
+                        <select id="create-game" required></select>
+                        <label>Room Name</label>
+                        <input type="text" id="create-name" placeholder="My Game Room" maxlength="40">
+                        <label>Max Players</label>
+                        <select id="create-max">
+                            <option value="2">2 Players</option>
+                            <option value="3">3 Players</option>
+                            <option value="4">4 Players</option>
+                        </select>
+                        <label><input type="checkbox" id="create-private"> Private Room</label>
+                        <div class="lobby-form-actions">
+                            <button type="button" class="btn-outline" onclick="LobbyUI.showList()">Back</button>
+                            <button type="submit" class="btn-primary">Create Room</button>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- Room / Waiting View -->
+                <div id="lobby-room" style="display:none;">
+                    <div class="room-header">
+                        <h3 id="room-name"></h3>
+                        <span id="room-game" class="room-game-badge"></span>
+                    </div>
+                    <div id="room-players" class="room-players"></div>
+                    <div id="room-chat" class="room-chat">
+                        <div id="room-chat-messages" class="room-chat-messages"></div>
+                        <div class="room-chat-input">
+                            <input type="text" id="room-chat-text" placeholder="Type a message..." maxlength="500" onkeydown="if(event.key==='Enter')LobbyUI.sendChat()">
+                            <button class="btn-primary btn-sm" onclick="LobbyUI.sendChat()">Send</button>
+                        </div>
+                    </div>
+                    <div class="room-actions">
+                        <button class="btn-outline" onclick="LobbyUI.leave()">Leave Room</button>
+                        <button id="room-ready-btn" class="btn-primary" onclick="LobbyUI.toggleReady()">Ready</button>
+                        <button id="room-start-btn" class="btn-primary" onclick="LobbyUI.startGame()" style="display:none;">Start Game</button>
+                    </div>
+                </div>
+            </div>
+            <button class="modal-close" onclick="SiteUI.closeModal()">&times;</button>
+        </div>
     </div>
 
     <!-- Phaser 3 via CDN -->
@@ -160,6 +224,7 @@
     <script src="js/engine/GameRegistry.js"></script>
     <script src="js/engine/SaveManager.js"></script>
     <script src="js/engine/CloudSyncAPI.js"></script>
+    <script src="js/engine/MultiplayerClient.js"></script>
     <script src="js/engine/BootScene.js"></script>
     <script src="js/engine/Launcher.js"></script>
 
@@ -192,5 +257,6 @@
 
     <!-- Site UI: Auth, Billing, Profile -->
     <script src="js/site-ui.js"></script>
+    <script src="js/lobby-ui.js"></script>
 </body>
 </html>
