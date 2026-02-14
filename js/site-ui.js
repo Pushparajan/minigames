@@ -40,14 +40,38 @@ const SiteUI = (() => {
         const guestNav = document.getElementById('nav-guest');
         const userNav = document.getElementById('nav-user');
         const username = document.getElementById('nav-username');
+        const adminBtn = document.getElementById('nav-admin-btn');
 
         if (_token && _user) {
             guestNav.style.display = 'none';
             userNav.style.display = 'flex';
             username.textContent = _user.displayName || _user.email || 'Player';
+
+            // Show Admin button for admin users
+            if (_user.adminRole) {
+                adminBtn.style.display = '';
+            } else {
+                adminBtn.style.display = 'none';
+                _checkAdminRole();
+            }
         } else {
             guestNav.style.display = 'flex';
             userNav.style.display = 'none';
+            adminBtn.style.display = 'none';
+        }
+    }
+
+    async function _checkAdminRole() {
+        try {
+            const res = await _apiRequest('GET', '/player/profile');
+            if (res.player && res.player.admin_role) {
+                _user.adminRole = res.player.admin_role;
+                localStorage.setItem('stem_user', JSON.stringify(_user));
+                const adminBtn = document.getElementById('nav-admin-btn');
+                if (adminBtn) adminBtn.style.display = '';
+            }
+        } catch (e) {
+            // Not admin or not authenticated
         }
     }
 

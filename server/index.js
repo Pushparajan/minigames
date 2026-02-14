@@ -27,6 +27,7 @@ const webhookRoutes = require('./routes/webhooks');
 const commentRoutes = require('./routes/comments');
 const adminRoutes = require('./routes/admin');
 const multiplayerRoutes = require('./routes/multiplayer');
+const adminGameRoutes = require('./routes/adminGames');
 const wsServer = require('./multiplayer/wsServer');
 
 const db = require('./models/db');
@@ -104,6 +105,8 @@ app.use('/api/v1/organisations', authenticate, organisationRoutes);
 app.use('/api/v1/comments', commentRoutes);
 app.use('/api/v1/admin', authenticate, adminRoutes);
 app.use('/api/v1/multiplayer', authenticate, multiplayerRoutes);
+app.use('/api/v1/admin/games', adminGameRoutes);
+app.use('/api/v1/games', adminGameRoutes);
 
 // =========================================
 // Error Handling

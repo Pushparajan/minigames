@@ -22,6 +22,7 @@
             <!-- Logged in state -->
             <div id="nav-user" class="nav-auth" style="display:none;">
                 <button class="nav-link" onclick="LobbyUI.show()">Multiplayer</button>
+                <button id="nav-admin-btn" class="nav-link" onclick="AdminGames.show()" style="display:none;">Admin</button>
                 <button id="nav-billing-btn" class="nav-link" onclick="SiteUI.showBilling()">Billing</button>
                 <span id="nav-username" class="nav-username"></span>
                 <button class="btn-outline btn-sm" onclick="SiteUI.logout()">Log Out</button>
@@ -214,6 +215,75 @@
             </div>
             <button class="modal-close" onclick="SiteUI.closeModal()">&times;</button>
         </div>
+
+        <!-- Admin: Game Management Modal -->
+        <div id="modal-admin-games" class="modal modal-wide" style="display:none;">
+            <h2>Game Management</h2>
+
+            <!-- Game List View -->
+            <div id="admin-games-list">
+                <div class="ag-actions">
+                    <button class="btn-primary" onclick="AdminGames.showAddForm()">Add Game</button>
+                </div>
+                <div id="admin-games-table">
+                    <p class="admin-games-empty">Loading...</p>
+                </div>
+            </div>
+
+            <!-- Add/Edit Form View -->
+            <div id="admin-games-form" style="display:none;">
+                <h3 id="admin-games-form-title">Add New Game</h3>
+                <form onsubmit="AdminGames.handleSubmit(event)">
+                    <div class="ag-form-row">
+                        <div class="ag-form-col">
+                            <label for="ag-id">Game ID</label>
+                            <input type="text" id="ag-id" placeholder="MyNewGame" required maxlength="61" pattern="[a-zA-Z][a-zA-Z0-9_\-]{1,60}">
+                        </div>
+                        <div class="ag-form-col">
+                            <label for="ag-title">Title</label>
+                            <input type="text" id="ag-title" placeholder="My New Game" required maxlength="80">
+                        </div>
+                    </div>
+                    <div class="ag-form-row">
+                        <div class="ag-form-col">
+                            <label for="ag-classic">Classic Reference</label>
+                            <input type="text" id="ag-classic" placeholder="e.g. Snake" maxlength="60">
+                        </div>
+                        <div class="ag-form-col">
+                            <label for="ag-character">Character ID</label>
+                            <input type="text" id="ag-character" placeholder="e.g. guha, nadia" maxlength="40">
+                        </div>
+                    </div>
+                    <div class="ag-form-row">
+                        <div class="ag-form-col">
+                            <label for="ag-mechanic">Mechanic Description</label>
+                            <input type="text" id="ag-mechanic" placeholder="Short description" maxlength="120">
+                        </div>
+                        <div class="ag-form-col ag-form-col-sm">
+                            <label for="ag-icon-color">Icon Color</label>
+                            <input type="color" id="ag-icon-color" value="#333333">
+                        </div>
+                        <div class="ag-form-col ag-form-col-sm">
+                            <label for="ag-icon-emoji">Icon Emoji</label>
+                            <input type="text" id="ag-icon-emoji" placeholder="?" maxlength="4">
+                        </div>
+                        <div class="ag-form-col ag-form-col-sm">
+                            <label for="ag-sort-order">Sort Order</label>
+                            <input type="number" id="ag-sort-order" value="100" min="0" max="999">
+                        </div>
+                    </div>
+                    <label for="ag-scene-code">Scene Code (Phaser.Scene class)</label>
+                    <textarea id="ag-scene-code" rows="12" placeholder="Return a Phaser.Scene subclass. Example:&#10;&#10;class MyGame extends Phaser.Scene {&#10;  constructor() { super({ key: 'MyGame' }); }&#10;  create() { /* ... */ }&#10;}&#10;return MyGame;" required></textarea>
+                    <div id="ag-form-error" class="form-error"></div>
+                    <div class="ag-form-actions">
+                        <button type="button" class="btn-outline" onclick="AdminGames.backToList()">Cancel</button>
+                        <button type="submit" class="btn-primary">Save Game</button>
+                    </div>
+                </form>
+            </div>
+
+            <button class="modal-close" onclick="SiteUI.closeModal()">&times;</button>
+        </div>
     </div>
 
     <!-- Phaser 3 via CDN -->
@@ -258,5 +328,6 @@
     <!-- Site UI: Auth, Billing, Profile -->
     <script src="js/site-ui.js"></script>
     <script src="js/lobby-ui.js"></script>
+    <script src="js/admin-games.js"></script>
 </body>
 </html>
