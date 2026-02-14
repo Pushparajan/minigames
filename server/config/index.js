@@ -62,5 +62,20 @@ module.exports = {
     tenant: {
         defaultTenantId: process.env.DEFAULT_TENANT_ID || 'stem_default',
         apiKeyHeader: 'x-api-key'
+    },
+
+    // Stripe
+    stripe: {
+        secretKey: process.env.STRIPE_SECRET_KEY || '',
+        publishableKey: process.env.STRIPE_PUBLISHABLE_KEY || '',
+        webhookSecret: process.env.STRIPE_WEBHOOK_SECRET || '',
+        pricingTableId: process.env.STRIPE_PRICING_TABLE_ID || '',
+        trialDays: parseInt(process.env.STRIPE_TRIAL_DAYS, 10) || 14,
+        portalReturnUrl: process.env.STRIPE_PORTAL_RETURN_URL || '',
+        defaultPriceIds: {
+            starter: process.env.STRIPE_PRICE_STARTER || '',
+            pro: process.env.STRIPE_PRICE_PRO || '',
+            enterprise: process.env.STRIPE_PRICE_ENTERPRISE || ''
+        }
     }
 };

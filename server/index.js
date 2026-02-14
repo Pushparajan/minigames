@@ -21,6 +21,9 @@ const scoreRoutes = require('./routes/scores');
 const leaderboardRoutes = require('./routes/leaderboards');
 const playerRoutes = require('./routes/player');
 const syncRoutes = require('./routes/sync');
+const billingRoutes = require('./routes/billing');
+const organisationRoutes = require('./routes/organisations');
+const webhookRoutes = require('./routes/webhooks');
 
 const db = require('./models/db');
 const cache = require('./services/cache');
@@ -34,6 +37,10 @@ const app = express();
 app.use(helmet());
 app.use(compression());
 app.use(cors({ origin: config.corsOrigins, credentials: true }));
+
+// Stripe webhooks need raw body BEFORE json parser
+app.use('/api/v1/webhooks', tenantResolver, webhookRoutes);
+
 app.use(express.json({ limit: '1mb' }));
 app.use(rateLimiter);
 app.use(tenantResolver);
@@ -63,6 +70,8 @@ app.use('/api/v1/scores', authenticate, scoreRoutes);
 app.use('/api/v1/leaderboards', optionalAuth, leaderboardRoutes);
 app.use('/api/v1/player', authenticate, playerRoutes);
 app.use('/api/v1/sync', authenticate, syncRoutes);
+app.use('/api/v1/billing', authenticate, billingRoutes);
+app.use('/api/v1/organisations', authenticate, organisationRoutes);
 
 // =========================================
 // Error Handling
