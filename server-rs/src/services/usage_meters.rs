@@ -1,8 +1,7 @@
 use chrono::{Datelike, NaiveDate, Utc};
 use serde::Serialize;
-use std::collections::HashMap;
 
-use crate::error::{AppError, AppResult};
+use crate::error::AppResult;
 
 #[derive(Debug, Serialize)]
 pub struct MeterStatus {

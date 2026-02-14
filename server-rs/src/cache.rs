@@ -30,7 +30,7 @@ impl Cache {
         let mut conn = self.conn.clone();
         redis::cmd("GET")
             .arg(self.key(key))
-            .query_async::<Option<String>>(&mut conn)
+            .query_async::<_, Option<String>>(&mut conn)
             .await
             .ok()
             .flatten()
@@ -115,7 +115,7 @@ impl Cache {
     pub async fn health_check(&self) -> bool {
         let mut conn = self.conn.clone();
         redis::cmd("PING")
-            .query_async::<String>(&mut conn)
+            .query_async::<_, String>(&mut conn)
             .await
             .is_ok()
     }

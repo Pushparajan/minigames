@@ -3,7 +3,7 @@ use serde_json::{json, Value};
 use uuid::Uuid;
 
 use crate::error::{AppError, AppResult};
-use crate::middleware::auth::{generate_tokens, verify_token, AuthPlayer};
+use crate::middleware::auth::{generate_tokens, verify_token};
 use crate::middleware::tenant::TenantId;
 use crate::models::player::*;
 use crate::AppState;

@@ -2,11 +2,8 @@ use axum::{
     body::Bytes,
     extract::State,
     http::{HeaderMap, StatusCode},
-    Json,
 };
-use serde_json::json;
 
-use crate::error::AppResult;
 use crate::services::subscription_sync;
 use crate::AppState;
 
