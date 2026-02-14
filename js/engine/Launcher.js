@@ -14,8 +14,16 @@ const Launcher = (() => {
      * Initialize the launcher UI.
      */
     function init() {
+        SaveManager.init();
         _buildGrid();
         _bindBackButton();
+
+        // Init cloud sync (non-blocking, fails silently if no API configured)
+        try {
+            CloudSyncAPI.init({ apiUrl: '/api/v1' });
+        } catch (e) {
+            console.log('CloudSyncAPI: Running in offline mode');
+        }
     }
 
     /**
@@ -30,12 +38,20 @@ const Launcher = (() => {
             card.className = 'game-card';
             card.dataset.gameId = game.id;
 
+            const progress = SaveManager.getGameProgress(game.id);
+            const starsHtml = _renderStars(progress.stars);
+            const highScoreHtml = progress.highScore > 0
+                ? `<div class="card-highscore">Best: ${progress.highScore.toLocaleString()}</div>`
+                : '';
+
             card.innerHTML = `
                 <span class="card-number">#${index + 1}</span>
                 <div class="card-icon" style="background:${game.iconColor || '#333'}">
                     ${game.iconEmoji || '?'}
                 </div>
                 <h3>${game.title}</h3>
+                <div class="card-stars">${starsHtml}</div>
+                ${highScoreHtml}
                 <div class="card-character">${_getCharacterLabel(game.character)}</div>
                 <div class="card-mechanic">${game.mechanic}</div>
             `;
@@ -153,6 +169,46 @@ const Launcher = (() => {
 
         document.getElementById('game-container').style.display = 'none';
         document.getElementById('launcher').style.display = 'block';
+
+        // Refresh card progress indicators
+        _refreshProgress();
+    }
+
+    /**
+     * Refresh progress indicators on all cards.
+     */
+    function _refreshProgress() {
+        const cards = document.querySelectorAll('.game-card');
+        cards.forEach(card => {
+            const gameId = card.dataset.gameId;
+            if (!gameId) return;
+            const progress = SaveManager.getGameProgress(gameId);
+            const starsEl = card.querySelector('.card-stars');
+            if (starsEl) starsEl.innerHTML = _renderStars(progress.stars);
+            let hsEl = card.querySelector('.card-highscore');
+            if (progress.highScore > 0) {
+                if (!hsEl) {
+                    hsEl = document.createElement('div');
+                    hsEl.className = 'card-highscore';
+                    const starsNode = card.querySelector('.card-stars');
+                    if (starsNode) starsNode.after(hsEl);
+                }
+                hsEl.textContent = `Best: ${progress.highScore.toLocaleString()}`;
+            }
+        });
+    }
+
+    /**
+     * Render star icons (0-3).
+     */
+    function _renderStars(count) {
+        let html = '';
+        for (let i = 0; i < 3; i++) {
+            html += i < count
+                ? '<span class="star star-earned">&#9733;</span>'
+                : '<span class="star star-empty">&#9734;</span>';
+        }
+        return html;
     }
 
     /**
@@ -163,6 +219,17 @@ const Launcher = (() => {
         if (el) el.textContent = `Score: ${value}`;
     }
 
+    /**
+     * Save a game score via SaveManager (callable from any game scene).
+     * @param {string} gameId
+     * @param {number} score
+     * @param {Object} [extras] - { time, level, customData }
+     * @returns {Object} { highScore, stars, isNewHigh, ... }
+     */
+    function saveGameScore(gameId, score, extras = {}) {
+        return SaveManager.saveScore(gameId, score, extras);
+    }
+
     // Auto-init when DOM is ready
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', init);
@@ -170,5 +237,5 @@ const Launcher = (() => {
         init();
     }
 
-    return { init, updateScore };
+    return { init, updateScore, saveGameScore };
 })();

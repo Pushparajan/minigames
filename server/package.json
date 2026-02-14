@@ -1,0 +1,28 @@
+{
+  "name": "stem-adventures-api",
+  "version": "1.0.0",
+  "description": "STEM School Adventures backend API — SaaS game platform for 1M+ players",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "dev": "nodemon index.js",
+    "migrate": "node ../db/migrations/run.js",
+    "seed": "node ../db/seeds/run.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "pg": "^8.11.3",
+    "redis": "^4.6.10",
+    "jsonwebtoken": "^9.0.2",
+    "bcryptjs": "^2.4.3",
+    "helmet": "^7.1.0",
+    "cors": "^2.8.5",
+    "express-rate-limit": "^7.1.4",
+    "dotenv": "^16.3.1",
+    "uuid": "^9.0.0",
+    "compression": "^1.7.4"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.2"
+  }
+}

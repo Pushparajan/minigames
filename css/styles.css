@@ -101,6 +101,33 @@ body {
     margin-bottom: 6px;
 }
 
+.game-card .card-stars {
+    margin: 4px 0;
+    font-size: 1rem;
+    line-height: 1;
+}
+
+.game-card .star {
+    display: inline-block;
+    margin-right: 1px;
+}
+
+.game-card .star-earned {
+    color: #feca57;
+    text-shadow: 0 0 6px rgba(254, 202, 87, 0.5);
+}
+
+.game-card .star-empty {
+    color: rgba(255, 255, 255, 0.15);
+}
+
+.game-card .card-highscore {
+    font-size: 0.75rem;
+    color: #48dbfb;
+    margin-bottom: 4px;
+    font-weight: 600;
+}
+
 .game-card .card-mechanic {
     font-size: 0.75rem;
     color: #7070a0;
