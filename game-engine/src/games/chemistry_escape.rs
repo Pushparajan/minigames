@@ -1,7 +1,8 @@
 use bevy::prelude::*;
-use rand::Rng;
 
 use crate::BevyBridge;
+use crate::pixar::{self, PixarAssets, CharacterConfig, palette};
+use crate::asset_loader::CustomAssets;
 
 // ---------------------------------------------------------------------------
 // Constants
@@ -60,15 +61,24 @@ struct GameState {
 // Setup
 // ---------------------------------------------------------------------------
 
-pub fn setup(mut commands: Commands) {
+pub fn setup(mut commands: Commands, pixar_assets: Res<PixarAssets>, custom_assets: Res<CustomAssets>) {
     commands.insert_resource(GameState { score: 0, move_cooldown: 0.0, gravity_timer: 0.0 });
 
     // Background
-    commands.spawn((
-        Sprite { color: Color::srgb(0.05, 0.05, 0.1), custom_size: Some(Vec2::new(960.0, 640.0)), ..default() },
-        Transform::from_xyz(0.0, 0.0, -1.0),
-        GameEntity,
-    ));
+    let bg_color = palette::LAB_BG;
+    if let Some(ref bg_handle) = custom_assets.background {
+        commands.spawn((
+            Sprite { image: bg_handle.clone(), custom_size: Some(Vec2::new(960.0, 640.0)), ..default() },
+            Transform::from_xyz(0.0, 0.0, -1.0),
+            GameEntity,
+        ));
+    } else {
+        commands.spawn((
+            Sprite { color: bg_color, custom_size: Some(Vec2::new(960.0, 640.0)), ..default() },
+            Transform::from_xyz(0.0, 0.0, -1.0),
+            GameEntity,
+        ));
+    }
 
     // Level layout (row 0 = bottom)
     let level = build_level();
@@ -76,25 +86,23 @@ pub fn setup(mut commands: Commands) {
         for col in 0..COLS {
             let kind = level[row as usize][col as usize];
             if kind == TileKind::Empty { continue; }
-            let color = tile_color(kind);
             let (px, py) = grid_to_world(col, row);
-            commands.spawn((
-                Sprite { color, custom_size: Some(Vec2::new(TILE - 2.0, TILE - 2.0)), ..default() },
-                Transform::from_xyz(px, py, 0.0),
-                Tile { gx: col, gy: row, kind },
-                GameEntity,
-            ));
+            let tile_size = Vec2::new(TILE - 2.0, TILE - 2.0);
+            spawn_tile(&mut commands, &pixar_assets, kind, tile_size, Vec3::new(px, py, 0.0), col, row);
         }
     }
 
     // Player at (1,1)
     let (px, py) = grid_to_world(1, 1);
-    commands.spawn((
-        Sprite { color: Color::srgb(0.2, 0.6, 1.0), custom_size: Some(Vec2::new(TILE - 8.0, TILE - 8.0)), ..default() },
-        Transform::from_xyz(px, py, 1.0),
-        Player { gx: 1, gy: 1, keys: [false; 3] },
-        GameEntity,
-    ));
+    let player_size = Vec2::new(TILE - 8.0, TILE - 8.0);
+    let player_config = CharacterConfig::hero(palette::HERO_GREEN, player_size);
+    pixar::spawn_character(
+        &mut commands,
+        &pixar_assets,
+        &player_config,
+        Vec3::new(px, py, 1.0),
+        (Player { gx: 1, gy: 1, keys: [false; 3] }, GameEntity),
+    );
 
     // HUD
     commands.spawn((
@@ -116,7 +124,7 @@ pub fn player_move(
     time: Res<Time>,
     mut state: ResMut<GameState>,
     mut pq: Query<(&mut Transform, &mut Player)>,
-    mut tiles: Query<(Entity, &mut Tile, &mut Sprite)>,
+    tiles: Query<(Entity, &Tile, &Sprite)>,
     mut commands: Commands,
     mut next_state: ResMut<NextState<crate::AppState>>,
 ) {
@@ -140,7 +148,7 @@ pub fn player_move(
     // Check tile at target
     let mut blocked = false;
     let mut despawn_tile: Option<Entity> = None;
-    for (e, tile, _) in &tiles {
+    for (_e, tile, _) in &tiles {
         if tile.gx == nx && tile.gy == ny {
             match tile.kind {
                 TileKind::Wall | TileKind::Floor => { blocked = true; }
@@ -163,15 +171,15 @@ pub fn player_move(
     state.move_cooldown = 0.15;
 
     // Check interactions at new position
-    for (e, tile, _) in &tiles {
+    for (ent, tile, _) in &tiles {
         if tile.gx != nx || tile.gy != ny { continue; }
         match tile.kind {
             TileKind::Key(c) => {
                 player.keys[c] = true;
-                despawn_tile = Some(e);
+                despawn_tile = Some(ent);
             }
             TileKind::Door(c) if player.keys[c] => {
-                despawn_tile = Some(e);
+                despawn_tile = Some(ent);
             }
             TileKind::Acid => {
                 next_state.set(crate::AppState::GameOver);
@@ -188,7 +196,7 @@ pub fn player_move(
         }
     }
     if let Some(e) = despawn_tile {
-        commands.entity(e).despawn();
+        commands.entity(e).despawn_recursive();
     }
 }
 
@@ -244,7 +252,7 @@ pub fn update_hud(
 // ---------------------------------------------------------------------------
 
 pub fn cleanup(mut commands: Commands, q: Query<Entity, With<GameEntity>>) {
-    for e in &q { commands.entity(e).despawn(); }
+    for e in &q { commands.entity(e).despawn_recursive(); }
     commands.remove_resource::<GameState>();
 }
 
@@ -256,19 +264,81 @@ fn grid_to_world(gx: i32, gy: i32) -> (f32, f32) {
     (ORIGIN_X + gx as f32 * TILE, ORIGIN_Y + gy as f32 * TILE)
 }
 
-fn tile_color(kind: TileKind) -> Color {
+fn spawn_tile(commands: &mut Commands, pixar_assets: &PixarAssets, kind: TileKind, size: Vec2, position: Vec3, gx: i32, gy: i32) {
     match kind {
-        TileKind::Wall => Color::srgb(0.35, 0.35, 0.4),
-        TileKind::Floor => Color::srgb(0.3, 0.25, 0.2),
-        TileKind::Key(0) => Color::srgb(1.0, 0.2, 0.2),
-        TileKind::Key(1) => Color::srgb(0.2, 1.0, 0.2),
-        TileKind::Key(_) => Color::srgb(0.2, 0.2, 1.0),
-        TileKind::Door(0) => Color::srgb(0.7, 0.1, 0.1),
-        TileKind::Door(1) => Color::srgb(0.1, 0.7, 0.1),
-        TileKind::Door(_) => Color::srgb(0.1, 0.1, 0.7),
-        TileKind::Acid => Color::srgb(0.4, 1.0, 0.0),
-        TileKind::Exit => Color::srgb(1.0, 0.85, 0.0),
-        TileKind::Empty => Color::NONE,
+        TileKind::Key(c) => {
+            // Keys are collectibles with faces
+            let color = match c {
+                0 => Color::srgb(1.0, 0.2, 0.2),
+                1 => Color::srgb(0.2, 1.0, 0.2),
+                _ => Color::srgb(0.2, 0.2, 1.0),
+            };
+            let config = CharacterConfig::collectible(color, size.x);
+            pixar::spawn_character(
+                commands,
+                pixar_assets,
+                &config,
+                position,
+                (Tile { gx, gy, kind }, GameEntity),
+            );
+        }
+        TileKind::Exit => {
+            // Exit is a collectible (gold)
+            let config = CharacterConfig::collectible(palette::GOLD, size.x);
+            pixar::spawn_character(
+                commands,
+                pixar_assets,
+                &config,
+                position,
+                (Tile { gx, gy, kind }, GameEntity),
+            );
+        }
+        TileKind::Acid => {
+            // Acid gets round_sprite with green glow
+            let color = Color::srgb(0.4, 1.0, 0.0);
+            commands.spawn((
+                pixar::round_sprite(pixar_assets, color, size),
+                Transform::from_translation(position),
+                Tile { gx, gy, kind },
+                GameEntity,
+            ));
+        }
+        TileKind::Wall => {
+            let config = CharacterConfig::prop(Color::srgb(0.35, 0.35, 0.4), size, false);
+            pixar::spawn_character(
+                commands,
+                pixar_assets,
+                &config,
+                position,
+                (Tile { gx, gy, kind }, GameEntity),
+            );
+        }
+        TileKind::Floor => {
+            let config = CharacterConfig::prop(palette::GROUND_BROWN, size, false);
+            pixar::spawn_character(
+                commands,
+                pixar_assets,
+                &config,
+                position,
+                (Tile { gx, gy, kind }, GameEntity),
+            );
+        }
+        TileKind::Door(c) => {
+            let color = match c {
+                0 => Color::srgb(0.7, 0.1, 0.1),
+                1 => Color::srgb(0.1, 0.7, 0.1),
+                _ => Color::srgb(0.1, 0.1, 0.7),
+            };
+            let config = CharacterConfig::prop(color, size, false);
+            pixar::spawn_character(
+                commands,
+                pixar_assets,
+                &config,
+                position,
+                (Tile { gx, gy, kind }, GameEntity),
+            );
+        }
+        TileKind::Empty => {} // never reached
     }
 }
 

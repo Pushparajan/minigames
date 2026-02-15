@@ -1,7 +1,8 @@
 use bevy::prelude::*;
-use rand::Rng;
 
 use crate::BevyBridge;
+use crate::pixar::{self, PixarAssets, CharacterConfig, palette};
+use crate::asset_loader::CustomAssets;
 
 // ---------------------------------------------------------------------------
 // Constants
@@ -58,23 +59,34 @@ struct GameState {
 // Setup
 // ---------------------------------------------------------------------------
 
-pub fn setup(mut commands: Commands) {
+pub fn setup(mut commands: Commands, pixar_assets: Res<PixarAssets>, custom_assets: Res<CustomAssets>) {
     commands.insert_resource(GameState { score: 0 });
 
     // Background
-    commands.spawn((
-        Sprite { color: Color::srgb(0.06, 0.04, 0.12), custom_size: Some(Vec2::new(960.0, 640.0)), ..default() },
-        Transform::from_xyz(0.0, 0.0, -1.0),
-        GameEntity,
-    ));
+    if let Some(ref bg_handle) = custom_assets.background {
+        commands.spawn((
+            Sprite { image: bg_handle.clone(), custom_size: Some(Vec2::new(960.0, 640.0)), ..default() },
+            Transform::from_xyz(0.0, 0.0, -1.0),
+            GameEntity,
+        ));
+    } else {
+        commands.spawn((
+            Sprite { color: Color::srgb(0.06, 0.04, 0.12), custom_size: Some(Vec2::new(960.0, 640.0)), ..default() },
+            Transform::from_xyz(0.0, 0.0, -1.0),
+            GameEntity,
+        ));
+    }
 
-    // Ground (always solid, white)
-    commands.spawn((
-        Sprite { color: Color::srgb(0.3, 0.3, 0.3), custom_size: Some(Vec2::new(960.0, 20.0)), ..default() },
-        Transform::from_xyz(0.0, -HALF_H + 10.0, 0.0),
-        Platform { color: GameColor::Red }, // ground: always solid (special-cased)
-        GameEntity,
-    ));
+    // Ground (always solid, white) — prop
+    let ground_size = Vec2::new(960.0, 20.0);
+    let ground_config = CharacterConfig::prop(Color::srgb(0.3, 0.3, 0.3), ground_size, false);
+    pixar::spawn_character(
+        &mut commands,
+        &pixar_assets,
+        &ground_config,
+        Vec3::new(0.0, -HALF_H + 10.0, 0.0),
+        (Platform { color: GameColor::Red }, GameEntity),
+    );
 
     // Platforms
     let plats: Vec<(f32, f32, f32, GameColor)> = vec![
@@ -89,15 +101,18 @@ pub fn setup(mut commands: Commands) {
         (350.0,  270.0,   80.0, GameColor::Blue),
     ];
     for (x, y, w, c) in &plats {
-        commands.spawn((
-            Sprite { color: gc_color(*c), custom_size: Some(Vec2::new(*w, PLAT_H)), ..default() },
-            Transform::from_xyz(*x, *y, 0.0),
-            Platform { color: *c },
-            GameEntity,
-        ));
+        let plat_size = Vec2::new(*w, PLAT_H);
+        let plat_config = CharacterConfig::prop(gc_color(*c), plat_size, false);
+        pixar::spawn_character(
+            &mut commands,
+            &pixar_assets,
+            &plat_config,
+            Vec3::new(*x, *y, 0.0),
+            (Platform { color: *c }, GameEntity),
+        );
     }
 
-    // Orbs
+    // Orbs — collectibles with faces
     let orbs: Vec<(f32, f32, GameColor)> = vec![
         (-300.0, -150.0, GameColor::Red),
         (-100.0, -70.0,  GameColor::Blue),
@@ -106,29 +121,36 @@ pub fn setup(mut commands: Commands) {
         (0.0,    170.0,  GameColor::Blue),
     ];
     for (x, y, c) in &orbs {
-        commands.spawn((
-            Sprite { color: gc_bright(*c), custom_size: Some(Vec2::new(ORB_SIZE, ORB_SIZE)), ..default() },
-            Transform::from_xyz(*x, *y, 0.5),
-            Orb { color: *c },
-            GameEntity,
-        ));
+        let orb_color = gc_bright(*c);
+        let config = CharacterConfig::collectible(orb_color, ORB_SIZE);
+        pixar::spawn_character(
+            &mut commands,
+            &pixar_assets,
+            &config,
+            Vec3::new(*x, *y, 0.5),
+            (Orb { color: *c }, GameEntity),
+        );
     }
 
-    // Goal star
-    commands.spawn((
-        Sprite { color: Color::srgb(1.0, 0.9, 0.0), custom_size: Some(Vec2::new(30.0, 30.0)), ..default() },
-        Transform::from_xyz(350.0, 300.0, 0.5),
-        Goal,
-        GameEntity,
-    ));
+    // Goal star — collectible with GOLD
+    let goal_config = CharacterConfig::collectible(palette::GOLD, 30.0);
+    pixar::spawn_character(
+        &mut commands,
+        &pixar_assets,
+        &goal_config,
+        Vec3::new(350.0, 300.0, 0.5),
+        (Goal, GameEntity),
+    );
 
-    // Player
-    commands.spawn((
-        Sprite { color: Color::srgb(1.0, 1.0, 1.0), custom_size: Some(PLAYER_SIZE), ..default() },
-        Transform::from_xyz(-400.0, -HALF_H + 20.0 + PLAYER_SIZE.y / 2.0, 1.0),
-        Player { vy: 0.0, on_ground: true, active: GameColor::Red },
-        GameEntity,
-    ));
+    // Player — hero with HERO_PURPLE
+    let player_config = CharacterConfig::hero(palette::HERO_PURPLE, PLAYER_SIZE);
+    pixar::spawn_character(
+        &mut commands,
+        &pixar_assets,
+        &player_config,
+        Vec3::new(-400.0, -HALF_H + 20.0 + PLAYER_SIZE.y / 2.0, 1.0),
+        (Player { vy: 0.0, on_ground: true, active: GameColor::Red }, GameEntity),
+    );
 
     // HUD
     commands.spawn((
@@ -221,7 +243,7 @@ pub fn collect_orbs(
         let dy = (ptf.translation.y - otf.translation.y).abs();
         if dx < 24.0 && dy < 24.0 && orb.color == player.active {
             state.score += 100;
-            commands.entity(e).despawn();
+            commands.entity(e).despawn_recursive();
         }
     }
 }
@@ -272,7 +294,7 @@ pub fn update_hud(state: Res<GameState>, pq: Query<&Player>, mut sq: Query<&mut 
 // ---------------------------------------------------------------------------
 
 pub fn cleanup(mut commands: Commands, q: Query<Entity, With<GameEntity>>) {
-    for e in &q { commands.entity(e).despawn(); }
+    for e in &q { commands.entity(e).despawn_recursive(); }
     commands.remove_resource::<GameState>();
 }
 

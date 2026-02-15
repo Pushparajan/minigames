@@ -1,11 +1,8 @@
 use bevy::prelude::*;
-use rand::Rng;
 
 use crate::BevyBridge;
-
-// ---------------------------------------------------------------------------
-// Constants
-// ---------------------------------------------------------------------------
+use crate::pixar::{self, PixarAssets, CharacterConfig, palette};
+use crate::asset_loader::CustomAssets;
 
 const COLS: i32 = 12;
 const ROWS: i32 = 8;
@@ -15,10 +12,6 @@ const ORIGIN_Y: f32 = -175.0;
 const GRAVITY_TICK: f32 = 0.10;
 const MOVE_CD: f32 = 0.13;
 const ENEMY_TICK: f32 = 0.4;
-
-// ---------------------------------------------------------------------------
-// Components
-// ---------------------------------------------------------------------------
 
 #[derive(Component)]
 pub struct GameEntity;
@@ -55,21 +48,25 @@ struct GameState {
     enemy_timer: f32,
 }
 
-// ---------------------------------------------------------------------------
-// Setup
-// ---------------------------------------------------------------------------
-
-pub fn setup(mut commands: Commands) {
+pub fn setup(mut commands: Commands, pixar_assets: Res<PixarAssets>, custom_assets: Res<CustomAssets>) {
     commands.insert_resource(GameState {
         score: 0, move_cd: 0.0, gravity_timer: 0.0, enemy_timer: 0.0,
     });
 
     // Background
-    commands.spawn((
-        Sprite { color: Color::srgb(0.05, 0.05, 0.12), custom_size: Some(Vec2::new(960.0, 640.0)), ..default() },
-        Transform::from_xyz(0.0, 0.0, -1.0),
-        GameEntity,
-    ));
+    if let Some(ref bg_handle) = custom_assets.background {
+        commands.spawn((
+            Sprite { image: bg_handle.clone(), custom_size: Some(Vec2::new(960.0, 640.0)), ..default() },
+            Transform::from_xyz(0.0, 0.0, -1.0),
+            GameEntity,
+        ));
+    } else {
+        commands.spawn((
+            Sprite { color: Color::srgb(0.05, 0.05, 0.12), custom_size: Some(Vec2::new(960.0, 640.0)), ..default() },
+            Transform::from_xyz(0.0, 0.0, -1.0),
+            GameEntity,
+        ));
+    }
 
     // Build level
     let level = build_level();
@@ -78,41 +75,38 @@ pub fn setup(mut commands: Commands) {
             let kind = level[row as usize][col as usize];
             if kind.is_none() { continue; }
             let k = kind.unwrap();
-            let color = match k {
-                TileKind::Floor => Color::srgb(0.3, 0.25, 0.2),
-                TileKind::Ladder => Color::srgb(0.6, 0.5, 0.1),
-                TileKind::Goal => Color::srgb(0.9, 0.1, 0.5),
-            };
             let (px, py) = grid_to_world(col, row);
-            commands.spawn((
-                Sprite { color, custom_size: Some(Vec2::new(TILE - 2.0, TILE - 2.0)), ..default() },
-                Transform::from_xyz(px, py, 0.0),
-                Tile { gx: col, gy: row, kind: k },
-                GameEntity,
-            ));
+            let tile_size = Vec2::new(TILE - 2.0, TILE - 2.0);
+            spawn_tile(&mut commands, &pixar_assets, k, tile_size, Vec3::new(px, py, 0.0), col, row);
         }
     }
 
-    // Enemies
+    // Enemies (guards) — enemy with VILLAIN_PURPLE
     let enemies = [(3, 1, 1), (7, 3, -1), (5, 5, 1)];
     for (gx, gy, dir) in enemies {
         let (px, py) = grid_to_world(gx, gy);
-        commands.spawn((
-            Sprite { color: Color::srgb(0.9, 0.2, 0.1), custom_size: Some(Vec2::new(TILE - 12.0, TILE - 8.0)), ..default() },
-            Transform::from_xyz(px, py, 0.8),
-            Enemy { gx, gy, dir },
-            GameEntity,
-        ));
+        let enemy_size = Vec2::new(TILE - 12.0, TILE - 8.0);
+        let config = CharacterConfig::enemy(palette::VILLAIN_PURPLE, enemy_size);
+        pixar::spawn_character(
+            &mut commands,
+            &pixar_assets,
+            &config,
+            Vec3::new(px, py, 0.8),
+            (Enemy { gx, gy, dir }, GameEntity),
+        );
     }
 
-    // Player at (1,1)
+    // Player (student) at (1,1) — hero with HERO_BLUE
     let (px, py) = grid_to_world(1, 1);
-    commands.spawn((
-        Sprite { color: Color::srgb(0.2, 0.5, 1.0), custom_size: Some(Vec2::new(TILE - 12.0, TILE - 6.0)), ..default() },
-        Transform::from_xyz(px, py, 1.0),
-        Player { gx: 1, gy: 1, lives: 3, on_ladder: false },
-        GameEntity,
-    ));
+    let player_size = Vec2::new(TILE - 12.0, TILE - 6.0);
+    let player_config = CharacterConfig::hero(palette::HERO_BLUE, player_size);
+    pixar::spawn_character(
+        &mut commands,
+        &pixar_assets,
+        &player_config,
+        Vec3::new(px, py, 1.0),
+        (Player { gx: 1, gy: 1, lives: 3, on_ladder: false }, GameEntity),
+    );
 
     // HUD
     commands.spawn((
@@ -124,10 +118,6 @@ pub fn setup(mut commands: Commands) {
         GameEntity,
     ));
 }
-
-// ---------------------------------------------------------------------------
-// Systems
-// ---------------------------------------------------------------------------
 
 pub fn player_move(
     keys: Res<ButtonInput<KeyCode>>,
@@ -252,12 +242,12 @@ pub fn check_enemy_collision(
     enemies: Query<(Entity, &Enemy, &Transform), Without<Player>>,
     mut next_state: ResMut<NextState<crate::AppState>>,
 ) {
-    let Ok((ptf, mut player)) = pq.get_single_mut() else { return };
+    let Ok((_ptf, mut player)) = pq.get_single_mut() else { return };
     for (e, enemy, _etf) in &enemies {
         if player.gx == enemy.gx && player.gy == enemy.gy {
             // Stomp not possible at same level — damage
             player.lives -= 1;
-            commands.entity(e).despawn();
+            commands.entity(e).despawn_recursive();
             if player.lives <= 0 {
                 next_state.set(crate::AppState::GameOver);
                 return;
@@ -265,7 +255,7 @@ pub fn check_enemy_collision(
         } else if player.gx == enemy.gx && player.gy == enemy.gy + 1 {
             // Stomping from above
             state.score += 100;
-            commands.entity(e).despawn();
+            commands.entity(e).despawn_recursive();
         }
     }
 }
@@ -281,21 +271,49 @@ pub fn update_hud(state: Res<GameState>, pq: Query<&Player>, mut sq: Query<&mut 
     }
 }
 
-// ---------------------------------------------------------------------------
-// Cleanup
-// ---------------------------------------------------------------------------
-
 pub fn cleanup(mut commands: Commands, q: Query<Entity, With<GameEntity>>) {
-    for e in &q { commands.entity(e).despawn(); }
+    for e in &q { commands.entity(e).despawn_recursive(); }
     commands.remove_resource::<GameState>();
 }
 
-// ---------------------------------------------------------------------------
-// Helpers
-// ---------------------------------------------------------------------------
-
 fn grid_to_world(gx: i32, gy: i32) -> (f32, f32) {
     (ORIGIN_X + gx as f32 * TILE, ORIGIN_Y + gy as f32 * TILE)
+}
+
+fn spawn_tile(commands: &mut Commands, pixar_assets: &PixarAssets, kind: TileKind, size: Vec2, position: Vec3, gx: i32, gy: i32) {
+    match kind {
+        TileKind::Floor => {
+            let config = CharacterConfig::prop(Color::srgb(0.3, 0.25, 0.2), size, false);
+            pixar::spawn_character(
+                commands,
+                pixar_assets,
+                &config,
+                position,
+                (Tile { gx, gy, kind }, GameEntity),
+            );
+        }
+        TileKind::Ladder => {
+            let config = CharacterConfig::prop(Color::srgb(0.6, 0.5, 0.1), size, false);
+            pixar::spawn_character(
+                commands,
+                pixar_assets,
+                &config,
+                position,
+                (Tile { gx, gy, kind }, GameEntity),
+            );
+        }
+        TileKind::Goal => {
+            // Principal — collectible/hero with GOLD
+            let config = CharacterConfig::collectible(palette::GOLD, size.x);
+            pixar::spawn_character(
+                commands,
+                pixar_assets,
+                &config,
+                position,
+                (Tile { gx, gy, kind }, GameEntity),
+            );
+        }
+    }
 }
 
 fn build_level() -> Vec<Vec<Option<TileKind>>> {

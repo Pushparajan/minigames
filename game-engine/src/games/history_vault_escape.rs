@@ -1,7 +1,7 @@
 use bevy::prelude::*;
-use rand::Rng;
-
 use crate::BevyBridge;
+use crate::pixar::{self, PixarAssets, CharacterConfig, palette};
+use crate::asset_loader::CustomAssets;
 
 // ---------------------------------------------------------------------------
 // Constants
@@ -70,20 +70,46 @@ fn world_pos(gx: i32, gy: i32) -> Vec3 {
 
 fn tile_color(kind: TileKind, active: bool) -> Color {
     match kind {
-        TileKind::Wall => Color::srgb(0.25, 0.25, 0.3),
-        TileKind::Floor => Color::srgb(0.15, 0.15, 0.18),
-        TileKind::Key(0) => Color::srgb(1.0, 0.3, 0.3),
-        TileKind::Key(1) => Color::srgb(0.3, 1.0, 0.3),
-        TileKind::Key(_) => Color::srgb(0.3, 0.3, 1.0),
-        TileKind::Door(0) => Color::srgb(0.6, 0.15, 0.15),
-        TileKind::Door(1) => Color::srgb(0.15, 0.6, 0.15),
-        TileKind::Door(_) => Color::srgb(0.15, 0.15, 0.6),
+        TileKind::Wall => palette::SHADOW,
+        TileKind::Floor => palette::NIGHT_BG,
+        TileKind::Key(0) => palette::HERO_RED,
+        TileKind::Key(1) => palette::HERO_GREEN,
+        TileKind::Key(_) => palette::HERO_BLUE,
+        TileKind::Door(0) => palette::VILLAIN_RED,
+        TileKind::Door(1) => palette::VILLAIN_GREEN,
+        TileKind::Door(_) => palette::VILLAIN_PURPLE,
         TileKind::Trap(_) => {
-            if active { Color::srgb(1.0, 0.1, 0.6) } else { Color::srgb(0.2, 0.2, 0.2) }
+            if active { palette::CANDY_PINK } else { palette::SHADOW }
         }
-        TileKind::Switch(_) => Color::srgb(1.0, 1.0, 0.2),
-        TileKind::Block => Color::srgb(0.55, 0.4, 0.2),
-        TileKind::Exit => Color::srgb(0.0, 1.0, 0.8),
+        TileKind::Switch(_) => palette::HERO_YELLOW,
+        TileKind::Block => palette::GROUND_BROWN,
+        TileKind::Exit => palette::ELECTRIC_CYAN,
+    }
+}
+
+fn is_collectible_tile(kind: TileKind) -> bool {
+    matches!(kind, TileKind::Key(_) | TileKind::Switch(_) | TileKind::Exit)
+}
+
+fn spawn_tile(commands: &mut Commands, pixar_assets: &PixarAssets, gx: i32, gy: i32, kind: TileKind) {
+    let color = tile_color(kind, true);
+    let size = Vec2::splat(TILE - 2.0);
+    let pos = world_pos(gx, gy);
+
+    if is_collectible_tile(kind) {
+        let config = CharacterConfig::collectible(color, TILE - 6.0);
+        pixar::spawn_character(commands, pixar_assets, &config, pos.extend(0.0).truncate().extend(0.0), (
+            Tile { kind, gx, gy, active: true },
+            GameEntity,
+        ));
+    } else {
+        // Walls, floors, doors, traps, blocks are props
+        let is_round = matches!(kind, TileKind::Block);
+        let config = CharacterConfig::prop(color, size, is_round);
+        pixar::spawn_character(commands, pixar_assets, &config, pos.extend(0.0).truncate().extend(0.0), (
+            Tile { kind, gx, gy, active: true },
+            GameEntity,
+        ));
     }
 }
 
@@ -91,33 +117,36 @@ fn tile_color(kind: TileKind, active: bool) -> Color {
 // Setup
 // ---------------------------------------------------------------------------
 
-pub fn setup(mut commands: Commands) {
+pub fn setup(mut commands: Commands, pixar_assets: Res<PixarAssets>, custom_assets: Res<CustomAssets>) {
     commands.insert_resource(GameState { score: 0, move_cooldown: 0.0 });
 
     // Background
-    commands.spawn((
-        Sprite { color: Color::srgb(0.05, 0.05, 0.1), custom_size: Some(Vec2::new(960.0, 640.0)), ..default() },
-        Transform::from_xyz(0.0, 0.0, -1.0),
-        GameEntity,
-    ));
+    let bg_color = palette::NIGHT_BG;
+    if let Some(ref bg_handle) = custom_assets.background {
+        commands.spawn((
+            Sprite { image: bg_handle.clone(), custom_size: Some(Vec2::new(960.0, 640.0)), ..default() },
+            Transform::from_xyz(0.0, 0.0, -1.0),
+            GameEntity,
+        ));
+    } else {
+        commands.spawn((
+            Sprite { color: bg_color, custom_size: Some(Vec2::new(960.0, 640.0)), ..default() },
+            Transform::from_xyz(0.0, 0.0, -1.0),
+            GameEntity,
+        ));
+    }
 
     // Build level layout
     #[rustfmt::skip]
     let layout: Vec<(i32, i32, TileKind)> = build_level();
 
     for (gx, gy, kind) in &layout {
-        commands.spawn((
-            Sprite { color: tile_color(*kind, true), custom_size: Some(Vec2::splat(TILE - 2.0)), ..default() },
-            Transform::from_translation(world_pos(*gx, *gy)),
-            Tile { kind: *kind, gx: *gx, gy: *gy, active: true },
-            GameEntity,
-        ));
+        spawn_tile(&mut commands, &pixar_assets, *gx, *gy, *kind);
     }
 
-    // Player
-    commands.spawn((
-        Sprite { color: Color::srgb(0.2, 0.6, 1.0), custom_size: Some(Vec2::splat(TILE - 8.0)), ..default() },
-        Transform::from_translation(world_pos(1, 1) + Vec3::Z),
+    // Player (explorer)
+    let player_config = CharacterConfig::hero(palette::HERO_ORANGE, Vec2::splat(TILE - 8.0));
+    pixar::spawn_character(&mut commands, &pixar_assets, &player_config, world_pos(1, 1) + Vec3::Z, (
         Player { gx: 1, gy: 1, keys: [false; 3] },
         GameEntity,
     ));
@@ -193,7 +222,7 @@ pub fn player_input(
     mut state: ResMut<GameState>,
     mut pq: Query<(&mut Player, &mut Transform)>,
     mut tq: Query<(&mut Tile, &mut Sprite, Entity)>,
-    mut commands: Commands,
+    _commands: Commands,
     mut next_state: ResMut<NextState<crate::AppState>>,
 ) {
     state.move_cooldown -= time.delta_secs();
@@ -205,7 +234,7 @@ pub fn player_input(
         else if keys.just_pressed(KeyCode::ArrowRight) { (1, 0) }
         else { return; };
 
-    let Ok((mut player, mut ptf)) = pq.get_single_mut() else { return };
+    let Ok((mut player, _ptf)) = pq.get_single_mut() else { return };
     let nx = player.gx + dx;
     let ny = player.gy + dy;
 
@@ -224,7 +253,7 @@ pub fn player_input(
             match behind {
                 Some(TileKind::Floor) => {
                     // Push block
-                    for (mut t, mut s, _) in &mut tq {
+                    for (mut t, _s, _) in &mut tq {
                         if t.gx == nx && t.gy == ny && t.kind == TileKind::Block {
                             t.gx = bx;
                             t.gy = by;

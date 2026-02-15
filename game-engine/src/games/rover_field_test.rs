@@ -2,6 +2,8 @@ use bevy::prelude::*;
 use rand::Rng;
 
 use crate::BevyBridge;
+use crate::pixar::{self, PixarAssets, CharacterConfig, palette};
+use crate::asset_loader::CustomAssets;
 
 // ---------------------------------------------------------------------------
 // Constants
@@ -56,7 +58,7 @@ struct GameState {
 // Setup
 // ---------------------------------------------------------------------------
 
-pub fn setup(mut commands: Commands) {
+pub fn setup(mut commands: Commands, pixar_assets: Res<PixarAssets>, custom_assets: Res<CustomAssets>) {
     commands.insert_resource(GameState {
         distance: 0.0,
         scroll_offset: 0.0,
@@ -64,24 +66,33 @@ pub fn setup(mut commands: Commands) {
     });
 
     // Background
-    commands.spawn((
-        Sprite { color: Color::srgb(0.08, 0.06, 0.14), custom_size: Some(Vec2::new(960.0, 640.0)), ..default() },
-        Transform::from_xyz(0.0, 0.0, -1.0),
-        GameEntity,
-    ));
+    if let Some(ref bg) = custom_assets.background {
+        commands.spawn((
+            Sprite { image: bg.clone(), custom_size: Some(Vec2::new(960.0, 640.0)), ..default() },
+            Transform::from_xyz(0.0, 0.0, -1.0),
+            GameEntity,
+        ));
+    } else {
+        commands.spawn((
+            Sprite { color: palette::NIGHT_BG, custom_size: Some(Vec2::new(960.0, 640.0)), ..default() },
+            Transform::from_xyz(0.0, 0.0, -1.0),
+            GameEntity,
+        ));
+    }
 
     // Rover
-    commands.spawn((
-        Sprite { color: Color::srgb(0.3, 0.6, 0.9), custom_size: Some(ROVER_SIZE), ..default() },
-        Transform::from_xyz(ROVER_X, GROUND_Y, 2.0),
-        Rover { velocity: BASE_SPEED, fuel: FUEL_MAX },
-        GameEntity,
-    ));
+    pixar::spawn_character(
+        &mut commands,
+        &pixar_assets,
+        &CharacterConfig::vehicle(palette::HERO_ORANGE, ROVER_SIZE),
+        Vec3::new(ROVER_X, GROUND_Y, 2.0),
+        (Rover { velocity: BASE_SPEED, fuel: FUEL_MAX }, GameEntity),
+    );
 
     // Terrain segments
     for i in 0..NUM_SEGMENTS {
         commands.spawn((
-            Sprite { color: Color::srgb(0.35, 0.25, 0.15), custom_size: Some(Vec2::new(SEGMENT_W + 2.0, 200.0)), ..default() },
+            Sprite { color: palette::GROUND_BROWN, custom_size: Some(Vec2::new(SEGMENT_W + 2.0, 200.0)), ..default() },
             Transform::from_xyz(0.0, GROUND_Y - 100.0, 0.0),
             TerrainSegment { index: i },
             GameEntity,

@@ -2,6 +2,8 @@ use bevy::prelude::*;
 use rand::Rng;
 
 use crate::BevyBridge;
+use crate::pixar::{self, PixarAssets, CharacterConfig, palette};
+use crate::asset_loader::CustomAssets;
 
 // ---------------------------------------------------------------------------
 // Constants
@@ -58,64 +60,74 @@ struct GameState {
 // Setup
 // ---------------------------------------------------------------------------
 
-pub fn setup(mut commands: Commands) {
+pub fn setup(mut commands: Commands, pixar_assets: Res<PixarAssets>, custom_assets: Res<CustomAssets>) {
     // Oval track waypoints
     let wps = build_waypoints();
 
     commands.insert_resource(GameState { score: 0, waypoints: wps.clone() });
 
     // Background
-    commands.spawn((
-        Sprite { color: Color::srgb(0.15, 0.35, 0.1), custom_size: Some(Vec2::new(960.0, 640.0)), ..default() },
-        Transform::from_xyz(0.0, 0.0, -1.0),
-        GameEntity,
-    ));
-
-    // Track visuals (segments between waypoints)
-    for i in 0..wps.len() {
-        let p = wps[i];
+    if let Some(ref bg_handle) = custom_assets.background {
         commands.spawn((
-            Sprite { color: Color::srgb(0.3, 0.3, 0.35), custom_size: Some(Vec2::new(70.0, 70.0)), ..default() },
-            Transform::from_xyz(p.x, p.y, 0.0),
-            TrackVisual,
+            Sprite { image: bg_handle.clone(), custom_size: Some(Vec2::new(960.0, 640.0)), ..default() },
+            Transform::from_xyz(0.0, 0.0, -1.0),
             GameEntity,
         ));
-        // Waypoint marker
+    } else {
         commands.spawn((
-            Sprite { color: Color::srgb(0.9, 0.9, 0.2), custom_size: Some(Vec2::new(10.0, 10.0)), ..default() },
+            Sprite { color: palette::GROUND_GREEN, custom_size: Some(Vec2::new(960.0, 640.0)), ..default() },
+            Transform::from_xyz(0.0, 0.0, -1.0),
+            GameEntity,
+        ));
+    }
+
+    // Track visuals (segments between waypoints) — props
+    for i in 0..wps.len() {
+        let p = wps[i];
+        let track_size = Vec2::new(70.0, 70.0);
+        let config = CharacterConfig::prop(Color::srgb(0.3, 0.3, 0.35), track_size, false);
+        pixar::spawn_character(
+            &mut commands,
+            &pixar_assets,
+            &config,
+            Vec3::new(p.x, p.y, 0.0),
+            (TrackVisual, GameEntity),
+        );
+        // Waypoint marker — small round prop
+        commands.spawn((
+            pixar::round_sprite(&pixar_assets, Color::srgb(0.9, 0.9, 0.2), Vec2::new(10.0, 10.0)),
             Transform::from_xyz(p.x, p.y, 0.1),
             Waypoint { index: i },
             GameEntity,
         ));
     }
 
-    // Player car at first waypoint
+    // Player car at first waypoint — vehicle with HERO_RED
     let start = wps[0];
-    commands.spawn((
-        Sprite { color: Color::srgb(0.2, 0.5, 1.0), custom_size: Some(CAR_SIZE), ..default() },
-        Transform::from_xyz(start.x, start.y, 1.0),
-        PlayerCar { speed: 0.0, next_wp: 1, lap: 0 },
-        GameEntity,
-    ));
+    let player_config = CharacterConfig::vehicle(palette::HERO_RED, CAR_SIZE);
+    pixar::spawn_character(
+        &mut commands,
+        &pixar_assets,
+        &player_config,
+        Vec3::new(start.x, start.y, 1.0),
+        (PlayerCar { speed: 0.0, next_wp: 1, lap: 0 }, GameEntity),
+    );
 
-    // AI cars
-    let ai_colors = [
-        Color::srgb(0.9, 0.2, 0.2),
-        Color::srgb(0.2, 0.9, 0.2),
-        Color::srgb(0.9, 0.6, 0.1),
-    ];
+    // AI cars — vehicles with VILLAIN_PURPLE
     let mut rng = rand::thread_rng();
-    for (i, color) in ai_colors.iter().enumerate() {
+    for i in 0..3 {
         let t = (i as f32 + 1.0) * 0.25;
         let idx = ((t * wps.len() as f32) as usize) % wps.len();
         let p = wps[idx];
         let spd = rng.gen_range(100.0..180.0);
-        commands.spawn((
-            Sprite { color: *color, custom_size: Some(CAR_SIZE), ..default() },
-            Transform::from_xyz(p.x, p.y, 0.9),
-            AICar { path_t: t, speed: spd },
-            GameEntity,
-        ));
+        let config = CharacterConfig::vehicle(palette::VILLAIN_PURPLE, CAR_SIZE);
+        pixar::spawn_character(
+            &mut commands,
+            &pixar_assets,
+            &config,
+            Vec3::new(p.x, p.y, 0.9),
+            (AICar { path_t: t, speed: spd }, GameEntity),
+        );
     }
 
     // HUD
@@ -242,7 +254,7 @@ pub fn update_hud(state: Res<GameState>, pq: Query<&PlayerCar>, mut sq: Query<&m
 // ---------------------------------------------------------------------------
 
 pub fn cleanup(mut commands: Commands, q: Query<Entity, With<GameEntity>>) {
-    for e in &q { commands.entity(e).despawn(); }
+    for e in &q { commands.entity(e).despawn_recursive(); }
     commands.remove_resource::<GameState>();
 }
 

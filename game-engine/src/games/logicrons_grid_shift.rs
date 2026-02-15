@@ -1,7 +1,7 @@
 use bevy::prelude::*;
-use rand::Rng;
-
 use crate::BevyBridge;
+use crate::pixar::{self, PixarAssets, CharacterConfig, palette};
+use crate::asset_loader::CustomAssets;
 
 // ---------------------------------------------------------------------------
 // Constants
@@ -101,35 +101,38 @@ fn get_level(n: usize) -> LevelData {
     LevelData { floor, start }
 }
 
-fn spawn_level(commands: &mut Commands, level: usize) {
+fn floor_color(kind: FloorKind) -> Color {
+    match kind {
+        FloorKind::Solid => palette::SHADOW,
+        FloorKind::Void => palette::LAB_BG,
+        FloorKind::Goal => palette::GOLD,
+    }
+}
+
+fn spawn_level(commands: &mut Commands, pixar_assets: &PixarAssets, level: usize) {
     let data = get_level(level);
 
     for &(gx, gy, kind) in &data.floor {
-        let color = match kind {
-            FloorKind::Solid => Color::srgb(0.2, 0.22, 0.3),
-            FloorKind::Void => Color::srgb(0.05, 0.05, 0.08),
-            FloorKind::Goal => Color::srgb(0.8, 0.7, 0.1),
-        };
-        commands.spawn((
-            Sprite { color, custom_size: Some(Vec2::splat(TILE - 2.0)), ..default() },
-            Transform::from_translation(wp(gx, gy, 0.0)),
+        let color = floor_color(kind);
+        let is_goal = kind == FloorKind::Goal;
+        let config = CharacterConfig::prop(color, Vec2::splat(TILE - 2.0), is_goal);
+        pixar::spawn_character(commands, pixar_assets, &config, wp(gx, gy, 0.0), (
             FloorTile { kind, gx, gy },
             GameEntity,
         ));
     }
 
     let (sx, sy, ss) = data.start;
-    commands.spawn((
-        Sprite { color: Color::srgb(0.3, 0.5, 0.9), custom_size: Some(Vec2::splat(TILE - 6.0)), ..default() },
-        Transform::from_translation(wp(sx, sy, 1.0)),
+    // Active block tile (brighter color)
+    let config = CharacterConfig::prop(palette::HERO_BLUE, Vec2::splat(TILE - 6.0), true);
+    pixar::spawn_character(commands, pixar_assets, &config, wp(sx, sy, 1.0), (
         Block { state: ss, gx: sx, gy: sy },
         BlockVisual(0),
         GameEntity,
     ));
     // Second visual half (only visible when lying)
-    commands.spawn((
-        Sprite { color: Color::srgb(0.3, 0.5, 0.9), custom_size: Some(Vec2::splat(TILE - 6.0)), ..default() },
-        Transform::from_translation(wp(sx, sy, 1.0)),
+    let config2 = CharacterConfig::prop(palette::HERO_BLUE, Vec2::splat(TILE - 6.0), true);
+    pixar::spawn_character(commands, pixar_assets, &config2, wp(sx, sy, 1.0), (
         BlockVisual(1),
         GameEntity,
     ));
@@ -152,16 +155,25 @@ fn tile_is_safe(gx: i32, gy: i32, fq: &Query<&FloorTile>) -> bool {
 // Setup
 // ---------------------------------------------------------------------------
 
-pub fn setup(mut commands: Commands) {
+pub fn setup(mut commands: Commands, pixar_assets: Res<PixarAssets>, custom_assets: Res<CustomAssets>) {
     commands.insert_resource(GameState { score: 0, level: 0, moves: 0, cooldown: 0.0 });
 
-    commands.spawn((
-        Sprite { color: Color::srgb(0.04, 0.04, 0.08), custom_size: Some(Vec2::new(960.0, 640.0)), ..default() },
-        Transform::from_xyz(0.0, 0.0, -1.0),
-        GameEntity,
-    ));
+    // Background
+    if let Some(ref bg_handle) = custom_assets.background {
+        commands.spawn((
+            Sprite { image: bg_handle.clone(), custom_size: Some(Vec2::new(960.0, 640.0)), ..default() },
+            Transform::from_xyz(0.0, 0.0, -1.0),
+            GameEntity,
+        ));
+    } else {
+        commands.spawn((
+            Sprite { color: palette::LAB_BG, custom_size: Some(Vec2::new(960.0, 640.0)), ..default() },
+            Transform::from_xyz(0.0, 0.0, -1.0),
+            GameEntity,
+        ));
+    }
 
-    spawn_level(&mut commands, 0);
+    spawn_level(&mut commands, &pixar_assets, 0);
 
     commands.spawn((
         Text::new("Level 1 | Moves: 0"),
@@ -186,6 +198,7 @@ pub fn player_input(
     mut commands: Commands,
     entities: Query<Entity, With<GameEntity>>,
     mut next_state: ResMut<NextState<crate::AppState>>,
+    pixar_assets: Res<PixarAssets>,
 ) {
     state.cooldown -= time.delta_secs();
     if state.cooldown > 0.0 { return; }
@@ -229,11 +242,11 @@ pub fn player_input(
         state.moves = 0;
         for e in &entities { commands.entity(e).despawn(); }
         commands.spawn((
-            Sprite { color: Color::srgb(0.04, 0.04, 0.08), custom_size: Some(Vec2::new(960.0, 640.0)), ..default() },
+            Sprite { color: palette::LAB_BG, custom_size: Some(Vec2::new(960.0, 640.0)), ..default() },
             Transform::from_xyz(0.0, 0.0, -1.0),
             GameEntity,
         ));
-        spawn_level(&mut commands, state.level);
+        spawn_level(&mut commands, &pixar_assets, state.level);
         commands.spawn((
             Text::new(""),
             TextFont { font_size: 20.0, ..default() },
@@ -257,11 +270,11 @@ pub fn player_input(
             }
             for e in &entities { commands.entity(e).despawn(); }
             commands.spawn((
-                Sprite { color: Color::srgb(0.04, 0.04, 0.08), custom_size: Some(Vec2::new(960.0, 640.0)), ..default() },
+                Sprite { color: palette::LAB_BG, custom_size: Some(Vec2::new(960.0, 640.0)), ..default() },
                 Transform::from_xyz(0.0, 0.0, -1.0),
                 GameEntity,
             ));
-            spawn_level(&mut commands, state.level);
+            spawn_level(&mut commands, &pixar_assets, state.level);
             commands.spawn((
                 Text::new(""),
                 TextFont { font_size: 20.0, ..default() },

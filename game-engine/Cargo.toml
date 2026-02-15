@@ -17,6 +17,10 @@ bevy = { version = "0.15", default-features = false, features = [
     "bevy_ui",
     "bevy_winit",
     "bevy_state",
+    "bevy_gltf",
+    "bevy_scene",
+    "bevy_pbr",
+    "bevy_animation",
     "default_font",
     "png",
     "webgl2",
@@ -29,6 +33,10 @@ web-sys = { version = "0.3", features = [
     "Document",
     "HtmlCanvasElement",
     "console",
+    "Blob",
+    "BlobPropertyBag",
+    "File",
+    "Url",
 ] }
 js-sys = "0.3"
 serde = { version = "1", features = ["derive"] }

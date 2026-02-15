@@ -2,6 +2,8 @@ use bevy::prelude::*;
 use rand::Rng;
 
 use crate::BevyBridge;
+use crate::pixar::{self, PixarAssets, CharacterConfig, palette};
+use crate::asset_loader::CustomAssets;
 
 // ---------------------------------------------------------------------------
 // Constants
@@ -55,27 +57,39 @@ struct GameState {
 // Setup
 // ---------------------------------------------------------------------------
 
-pub fn setup(mut commands: Commands) {
+pub fn setup(mut commands: Commands, pixar_assets: Res<PixarAssets>, custom_assets: Res<CustomAssets>) {
     commands.insert_resource(GameState {
         score: 0, explosives_placed: 0, detonated: false,
         settling: false, settle_timer: 0.0, done: false,
     });
 
     // Background
-    commands.spawn((
-        Sprite { color: Color::srgb(0.08, 0.06, 0.1), custom_size: Some(Vec2::new(960.0, 640.0)), ..default() },
-        Transform::from_xyz(0.0, 0.0, -1.0),
-        GameEntity,
-    ));
+    if let Some(ref bg_handle) = custom_assets.background {
+        commands.spawn((
+            Sprite { image: bg_handle.clone(), custom_size: Some(Vec2::new(960.0, 640.0)), ..default() },
+            Transform::from_xyz(0.0, 0.0, -1.0),
+            GameEntity,
+        ));
+    } else {
+        commands.spawn((
+            Sprite { color: palette::SKY_BLUE, custom_size: Some(Vec2::new(960.0, 640.0)), ..default() },
+            Transform::from_xyz(0.0, 0.0, -1.0),
+            GameEntity,
+        ));
+    }
 
-    // Ground
-    commands.spawn((
-        Sprite { color: Color::srgb(0.25, 0.2, 0.15), custom_size: Some(Vec2::new(960.0, 30.0)), ..default() },
-        Transform::from_xyz(0.0, ORIGIN_Y - TILE / 2.0 - 15.0, 0.0),
-        GameEntity,
-    ));
+    // Ground — prop
+    let ground_size = Vec2::new(960.0, 30.0);
+    let ground_config = CharacterConfig::prop(palette::GROUND_BROWN, ground_size, false);
+    pixar::spawn_character(
+        &mut commands,
+        &pixar_assets,
+        &ground_config,
+        Vec3::new(0.0, ORIGIN_Y - TILE / 2.0 - 15.0, 0.0),
+        (GameEntity,),
+    );
 
-    // Building blocks
+    // Building blocks — props
     let mut rng = rand::thread_rng();
     let colors = [
         Color::srgb(0.7, 0.3, 0.3),
@@ -87,12 +101,15 @@ pub fn setup(mut commands: Commands) {
         for col in 0..COLS {
             let c = colors[rng.gen_range(0..colors.len())];
             let (px, py) = grid_to_world(col, row);
-            commands.spawn((
-                Sprite { color: c, custom_size: Some(Vec2::new(TILE - 4.0, TILE - 4.0)), ..default() },
-                Transform::from_xyz(px, py, 0.0),
-                Block { gx: col, gy: row, marked: false },
-                GameEntity,
-            ));
+            let block_size = Vec2::new(TILE - 4.0, TILE - 4.0);
+            let config = CharacterConfig::prop(c, block_size, false);
+            pixar::spawn_character(
+                &mut commands,
+                &pixar_assets,
+                &config,
+                Vec3::new(px, py, 0.0),
+                (Block { gx: col, gy: row, marked: false }, GameEntity),
+            );
         }
     }
 
@@ -133,7 +150,7 @@ pub fn place_explosive(
         let dy = (world_pos.y - tf.translation.y).abs();
         if dx < TILE / 2.0 && dy < TILE / 2.0 {
             block.marked = true;
-            spr.color = Color::srgb(1.0, 0.1, 0.1);
+            spr.color = palette::VILLAIN_RED;
             state.explosives_placed += 1;
             break;
         }
@@ -144,7 +161,8 @@ pub fn detonate(
     keys: Res<ButtonInput<KeyCode>>,
     mut state: ResMut<GameState>,
     mut commands: Commands,
-    mut blocks: Query<(Entity, &Block, &Transform)>,
+    pixar_assets: Res<PixarAssets>,
+    blocks: Query<(Entity, &Block, &Transform)>,
 ) {
     if state.detonated || state.done { return; }
     if !keys.just_pressed(KeyCode::Space) { return; }
@@ -169,21 +187,23 @@ pub fn detonate(
         .collect();
 
     for e in &to_destroy {
-        commands.entity(*e).despawn();
+        commands.entity(*e).despawn_recursive();
         destroyed += 1;
     }
 
     state.score += destroyed * 10;
 
-    // Spawn explosion VFX at marked positions
+    // Spawn explosion VFX at marked positions — projectile style
     for (mx, my) in &marked {
         let (px, py) = grid_to_world(*mx, *my);
-        commands.spawn((
-            Sprite { color: Color::srgb(1.0, 0.7, 0.0), custom_size: Some(Vec2::new(TILE * 2.5, TILE * 2.5)), ..default() },
-            Transform::from_xyz(px, py, 2.0),
-            ExplosionVfx { timer: 0.5 },
-            GameEntity,
-        ));
+        let config = CharacterConfig::projectile(palette::VILLAIN_RED, TILE * 2.5);
+        pixar::spawn_character(
+            &mut commands,
+            &pixar_assets,
+            &config,
+            Vec3::new(px, py, 2.0),
+            (ExplosionVfx { timer: 0.5 }, GameEntity),
+        );
     }
 
     state.settling = true;
@@ -200,7 +220,7 @@ pub fn explosion_vfx(
         fx.timer -= dt;
         spr.color = spr.color.with_alpha(fx.timer.max(0.0) * 2.0);
         if fx.timer <= 0.0 {
-            commands.entity(e).despawn();
+            commands.entity(e).despawn_recursive();
         }
     }
 }
@@ -259,7 +279,7 @@ pub fn update_hud(state: Res<GameState>, mut sq: Query<&mut Text, With<ScoreText
 // ---------------------------------------------------------------------------
 
 pub fn cleanup(mut commands: Commands, q: Query<Entity, With<GameEntity>>) {
-    for e in &q { commands.entity(e).despawn(); }
+    for e in &q { commands.entity(e).despawn_recursive(); }
     commands.remove_resource::<GameState>();
 }
 

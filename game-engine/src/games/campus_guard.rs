@@ -2,6 +2,8 @@ use bevy::prelude::*;
 use rand::Rng;
 
 use crate::BevyBridge;
+use crate::pixar::{self, PixarAssets, CharacterConfig, palette};
+use crate::asset_loader::CustomAssets;
 
 // Constants
 const CELL: f32 = 70.0;
@@ -60,21 +62,23 @@ fn grid_to_world(col: i32, row: i32) -> Vec2 {
 fn path_world(idx: usize) -> Vec2 { let (c, r) = PATH[idx]; grid_to_world(c, r) }
 
 // Setup
-pub fn setup(mut commands: Commands) {
+pub fn setup(mut commands: Commands, pixar_assets: Res<PixarAssets>, custom_assets: Res<CustomAssets>) {
     commands.insert_resource(GameState {
         score: 0, gold: START_GOLD, lives: START_LIVES,
         wave: 1, wave_timer: 5.0, enemies_per_wave: 3, spawned: 0, spawn_cd: 0.0,
     });
 
-    commands.spawn((
-        Sprite { color: Color::srgb(0.1, 0.12, 0.1), custom_size: Some(Vec2::new(960.0, 640.0)), ..default() },
-        Transform::from_xyz(0.0, 0.0, -1.0), GameEntity,
-    ));
+    let bg_sprite = if let Some(ref bg) = custom_assets.background {
+        Sprite { image: bg.clone(), custom_size: Some(Vec2::new(960.0, 640.0)), ..default() }
+    } else {
+        Sprite { color: palette::NIGHT_BG, custom_size: Some(Vec2::new(960.0, 640.0)), ..default() }
+    };
+    commands.spawn((bg_sprite, Transform::from_xyz(0.0, 0.0, -1.0), GameEntity));
 
     for &(c, r) in &PATH {
         let pos = grid_to_world(c, r);
         commands.spawn((
-            Sprite { color: Color::srgb(0.25, 0.22, 0.15), custom_size: Some(Vec2::splat(CELL - 2.0)), ..default() },
+            Sprite { color: palette::GROUND_BROWN, custom_size: Some(Vec2::splat(CELL - 2.0)), ..default() },
             Transform::from_xyz(pos.x, pos.y, -0.5), PathMarker, GameEntity,
         ));
     }
@@ -105,6 +109,7 @@ pub fn player_input(
     enemies: Query<&Transform, With<Enemy>>,
     mut state: ResMut<GameState>,
     mut commands: Commands,
+    pixar_assets: Res<PixarAssets>,
 ) {
     let click = mouse.just_pressed(MouseButton::Left) || touches.any_just_pressed();
     if !click || state.gold < TURRET_COST { return; }
@@ -124,13 +129,16 @@ pub fn player_input(
     }
     let _ = &enemies;
     state.gold -= TURRET_COST;
-    commands.spawn((
-        Sprite { color: Color::srgb(0.3, 0.6, 0.9), custom_size: Some(Vec2::splat(CELL - 8.0)), ..default() },
-        Transform::from_xyz(pos.x, pos.y, 0.5), Turret { cooldown: 0.0 }, GameEntity,
-    ));
+    pixar::spawn_character(
+        &mut commands,
+        &pixar_assets,
+        &CharacterConfig::robot(palette::HERO_GREEN, Vec2::splat(CELL - 8.0)),
+        Vec3::new(pos.x, pos.y, 0.5),
+        (Turret { cooldown: 0.0 }, GameEntity),
+    );
 }
 
-pub fn spawn_enemies(time: Res<Time>, mut state: ResMut<GameState>, mut commands: Commands) {
+pub fn spawn_enemies(time: Res<Time>, mut state: ResMut<GameState>, mut commands: Commands, pixar_assets: Res<PixarAssets>) {
     state.wave_timer -= time.delta_secs();
     if state.wave_timer <= 0.0 && state.spawned >= state.enemies_per_wave {
         state.wave += 1;
@@ -145,11 +153,13 @@ pub fn spawn_enemies(time: Res<Time>, mut state: ResMut<GameState>, mut commands
             state.spawned += 1;
             let start = path_world(0);
             let hp = 2 + state.wave;
-            commands.spawn((
-                Sprite { color: Color::srgb(0.9, 0.25, 0.2), custom_size: Some(Vec2::splat(20.0)), ..default() },
-                Transform::from_xyz(start.x, start.y, 1.0),
-                Enemy { hp, path_idx: 0, progress: 0.0 }, GameEntity,
-            ));
+            pixar::spawn_character(
+                &mut commands,
+                &pixar_assets,
+                &CharacterConfig::enemy(palette::VILLAIN_PURPLE, Vec2::splat(20.0)),
+                Vec3::new(start.x, start.y, 1.0),
+                (Enemy { hp, path_idx: 0, progress: 0.0 }, GameEntity),
+            );
         }
     }
 }
@@ -201,7 +211,7 @@ pub fn turret_fire(
             turret.cooldown = TURRET_COOLDOWN;
             let dir = (epos - tpos).normalize();
             commands.spawn((
-                Sprite { color: Color::srgb(1.0, 1.0, 0.4), custom_size: Some(Vec2::splat(6.0)), ..default() },
+                Sprite { color: palette::HERO_YELLOW, custom_size: Some(Vec2::splat(6.0)), ..default() },
                 Transform::from_xyz(tpos.x, tpos.y, 0.8),
                 Bullet { dx: dir.x * BULLET_SPEED, dy: dir.y * BULLET_SPEED }, GameEntity,
             ));

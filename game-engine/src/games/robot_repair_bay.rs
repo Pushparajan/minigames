@@ -2,20 +2,14 @@ use bevy::prelude::*;
 use rand::Rng;
 
 use crate::BevyBridge;
-
-// ---------------------------------------------------------------------------
-// Constants
-// ---------------------------------------------------------------------------
+use crate::pixar::{self, PixarAssets, CharacterConfig, palette};
+use crate::asset_loader::CustomAssets;
 
 const COLS: i32 = 6;
 const ROWS: i32 = 6;
 const TILE: f32 = 64.0;
 const ORIGIN_X: f32 = -((COLS as f32) * TILE) / 2.0 + TILE / 2.0;
 const ORIGIN_Y: f32 = -((ROWS as f32) * TILE) / 2.0 + TILE / 2.0;
-
-// ---------------------------------------------------------------------------
-// Components
-// ---------------------------------------------------------------------------
 
 #[derive(Component)]
 pub struct GameEntity;
@@ -48,15 +42,10 @@ struct GameState {
     won: bool,
 }
 
-// ---------------------------------------------------------------------------
-// Helpers
-// ---------------------------------------------------------------------------
-
 fn wp(gx: i32, gy: i32, z: f32) -> Vec3 {
     Vec3::new(ORIGIN_X + gx as f32 * TILE, ORIGIN_Y + gy as f32 * TILE, z)
 }
 
-/// Returns which sides (up, right, down, left) this pipe connects to.
 fn connections(pipe_type: PipeType, rotation: u8) -> [bool; 4] {
     let base = match pipe_type {
         PipeType::Straight => [true, false, true, false],  // up, down
@@ -66,7 +55,6 @@ fn connections(pipe_type: PipeType, rotation: u8) -> [bool; 4] {
     };
     let mut result = base;
     for _ in 0..rotation {
-        // Rotate clockwise: up->right, right->down, down->left, left->up
         let tmp = result[0];
         result[0] = result[3];
         result[3] = result[2];
@@ -78,20 +66,14 @@ fn connections(pipe_type: PipeType, rotation: u8) -> [bool; 4] {
 
 fn pipe_color(connected: bool, role: TileRole) -> Color {
     match role {
-        TileRole::Source => Color::srgb(0.2, 0.7, 1.0),
-        TileRole::Sink => Color::srgb(1.0, 0.4, 0.2),
+        TileRole::Source => palette::ELECTRIC_CYAN,
+        TileRole::Sink => palette::VILLAIN_RED,
         TileRole::Pipe => {
-            if connected { Color::srgb(0.2, 0.9, 0.3) } else { Color::srgb(0.5, 0.5, 0.55) }
+            if connected { palette::HERO_GREEN } else { palette::SHADOW }
         }
     }
 }
 
-/// Draw a simple pipe shape using the rotation angle (visual only).
-fn pipe_rotation_angle(rotation: u8) -> f32 {
-    rotation as f32 * std::f32::consts::FRAC_PI_2
-}
-
-/// BFS from source to check if there is a valid path to sink.
 fn compute_connectivity(pipes: &[(i32, i32, PipeType, u8, TileRole)]) -> Vec<bool> {
     let mut connected = vec![false; pipes.len()];
     let source_idx = pipes.iter().position(|p| p.4 == TileRole::Source);
@@ -101,7 +83,6 @@ fn compute_connectivity(pipes: &[(i32, i32, PipeType, u8, TileRole)]) -> Vec<boo
     queue.push_back(si);
     connected[si] = true;
 
-    // Direction offsets: up(0), right(1), down(2), left(3)
     let offsets: [(i32, i32); 4] = [(0, 1), (1, 0), (0, -1), (-1, 0)];
     let opposite: [usize; 4] = [2, 3, 0, 1];
 
@@ -113,7 +94,6 @@ fn compute_connectivity(pipes: &[(i32, i32, PipeType, u8, TileRole)]) -> Vec<boo
             if !conns[dir] { continue; }
             let nx = cx + offsets[dir].0;
             let ny = cy + offsets[dir].1;
-            // Find neighbor
             if let Some(ni) = pipes.iter().position(|p| p.0 == nx && p.1 == ny) {
                 if connected[ni] { continue; }
                 let (_, _, nt, nr, _) = pipes[ni];
@@ -129,23 +109,23 @@ fn compute_connectivity(pipes: &[(i32, i32, PipeType, u8, TileRole)]) -> Vec<boo
     connected
 }
 
-fn spawn_pipe_visuals(commands: &mut Commands, pipes: &Query<(&Pipe, Entity)>) {
-    // We don't need extra visuals; the main sprite + rotation is enough.
-}
-
-// ---------------------------------------------------------------------------
-// Setup
-// ---------------------------------------------------------------------------
-
-pub fn setup(mut commands: Commands) {
+pub fn setup(mut commands: Commands, pixar_assets: Res<PixarAssets>, custom_assets: Res<CustomAssets>) {
     commands.insert_resource(GameState { score: 0, won: false });
 
     // Background
-    commands.spawn((
-        Sprite { color: Color::srgb(0.06, 0.06, 0.1), custom_size: Some(Vec2::new(960.0, 640.0)), ..default() },
-        Transform::from_xyz(0.0, 0.0, -1.0),
-        GameEntity,
-    ));
+    if let Some(ref bg_handle) = custom_assets.background {
+        commands.spawn((
+            Sprite { image: bg_handle.clone(), custom_size: Some(Vec2::new(960.0, 640.0)), ..default() },
+            Transform::from_xyz(0.0, 0.0, -1.0),
+            GameEntity,
+        ));
+    } else {
+        commands.spawn((
+            Sprite { color: palette::LAB_BG, custom_size: Some(Vec2::new(960.0, 640.0)), ..default() },
+            Transform::from_xyz(0.0, 0.0, -1.0),
+            GameEntity,
+        ));
+    }
 
     let mut rng = rand::thread_rng();
     let pipe_types = [PipeType::Straight, PipeType::Corner, PipeType::Tjunction, PipeType::Cross];
@@ -172,24 +152,22 @@ pub fn setup(mut commands: Commands) {
                 rng.gen_range(0..4)
             };
 
-            // Background tile
-            commands.spawn((
-                Sprite { color: Color::srgb(0.12, 0.12, 0.16), custom_size: Some(Vec2::splat(TILE - 2.0)), ..default() },
-                Transform::from_translation(wp(gx, gy, 0.0)),
+            // Background tile (prop)
+            let bg_config = CharacterConfig::prop(palette::LAB_BG, Vec2::splat(TILE - 2.0), false);
+            pixar::spawn_character(&mut commands, &pixar_assets, &bg_config, wp(gx, gy, 0.0), (
                 GameEntity,
             ));
 
-            // Pipe visual: we draw connection stubs as small rectangles
+            // Pipe visual: center piece as robot
             let color = pipe_color(false, role);
             let conns = connections(pipe_type, rotation);
             let stub_w = TILE * 0.3;
             let stub_l = TILE * 0.45;
             let center_size = TILE * 0.35;
 
-            // Center piece
-            commands.spawn((
-                Sprite { color, custom_size: Some(Vec2::splat(center_size)), ..default() },
-                Transform::from_translation(wp(gx, gy, 0.5)),
+            // Center piece - robot style
+            let center_config = CharacterConfig::robot(color, Vec2::splat(center_size));
+            pixar::spawn_character(&mut commands, &pixar_assets, &center_config, wp(gx, gy, 0.5), (
                 Pipe { pipe_type, rotation, gx, gy, role, connected: false },
                 GameEntity,
             ));
@@ -224,10 +202,6 @@ pub fn setup(mut commands: Commands) {
     ));
 }
 
-// ---------------------------------------------------------------------------
-// Systems
-// ---------------------------------------------------------------------------
-
 pub fn handle_click(
     mouse: Res<ButtonInput<MouseButton>>,
     windows: Query<&Window>,
@@ -257,7 +231,6 @@ pub fn handle_click(
 pub fn update_connectivity(
     mut pq: Query<&mut Pipe>,
     mut state: ResMut<GameState>,
-    mut next_state: ResMut<NextState<crate::AppState>>,
 ) {
     if state.won { return; }
 
@@ -287,7 +260,6 @@ pub fn update_connectivity(
 pub fn update_visuals(
     pq: Query<&Pipe>,
     mut center_q: Query<(&Pipe, &mut Sprite), Without<ConnectorVisual>>,
-    mut stub_q: Query<(&ConnectorVisual, &mut Sprite, &mut Transform), Without<Pipe>>,
     mut commands: Commands,
     stub_entities: Query<Entity, With<ConnectorVisual>>,
 ) {
@@ -355,10 +327,6 @@ pub fn update_hud(state: Res<GameState>, mut q: Query<&mut Text, With<ScoreText>
         }
     }
 }
-
-// ---------------------------------------------------------------------------
-// Cleanup
-// ---------------------------------------------------------------------------
 
 pub fn cleanup(mut commands: Commands, q: Query<Entity, With<GameEntity>>) {
     for e in &q { commands.entity(e).despawn(); }

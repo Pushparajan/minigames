@@ -2,6 +2,8 @@ use bevy::prelude::*;
 use rand::Rng;
 
 use crate::BevyBridge;
+use crate::pixar::{self, PixarAssets, CharacterConfig, palette};
+use crate::asset_loader::CustomAssets;
 
 // ---------------------------------------------------------------------------
 // Constants
@@ -65,12 +67,14 @@ fn lane_x(lane: usize) -> f32 {
     LANE_START_X + (lane as f32) * LANE_SPACING
 }
 
-const LANE_COLORS: [Color; 4] = [
-    Color::srgb(0.9, 0.3, 0.3),
-    Color::srgb(0.3, 0.9, 0.3),
-    Color::srgb(0.3, 0.3, 0.9),
-    Color::srgb(0.9, 0.9, 0.3),
-];
+fn lane_color(lane: usize) -> Color {
+    match lane {
+        0 => palette::CANDY_PINK,
+        1 => palette::HERO_YELLOW,
+        2 => palette::ELECTRIC_CYAN,
+        _ => palette::HERO_PURPLE,
+    }
+}
 
 const LANE_KEYS: [KeyCode; 4] = [
     KeyCode::ArrowLeft,
@@ -83,17 +87,24 @@ const LANE_KEYS: [KeyCode; 4] = [
 // Setup
 // ---------------------------------------------------------------------------
 
-pub fn setup(mut commands: Commands) {
+pub fn setup(mut commands: Commands, pixar_assets: Res<PixarAssets>, custom_assets: Res<CustomAssets>) {
     commands.insert_resource(GameState {
         score: 0, combo: 0, misses: 0,
         spawn_timer: 0.0, speed: BASE_SPEED, elapsed: 0.0,
     });
 
     // Background
-    commands.spawn((
-        Sprite { color: Color::srgb(0.05, 0.04, 0.1), custom_size: Some(Vec2::new(960.0, 640.0)), ..default() },
-        Transform::from_xyz(0.0, 0.0, -1.0), GameEntity,
-    ));
+    if let Some(ref bg) = custom_assets.background {
+        commands.spawn((
+            Sprite { image: bg.clone(), custom_size: Some(Vec2::new(960.0, 640.0)), ..default() },
+            Transform::from_xyz(0.0, 0.0, -1.0), GameEntity,
+        ));
+    } else {
+        commands.spawn((
+            Sprite { color: palette::NIGHT_BG, custom_size: Some(Vec2::new(960.0, 640.0)), ..default() },
+            Transform::from_xyz(0.0, 0.0, -1.0), GameEntity,
+        ));
+    }
 
     // Hit line
     commands.spawn((
@@ -105,7 +116,7 @@ pub fn setup(mut commands: Commands) {
     // Lane indicators at hit line
     for lane in 0..LANE_COUNT {
         commands.spawn((
-            Sprite { color: LANE_COLORS[lane].with_alpha(0.3), custom_size: Some(Vec2::new(54.0, 24.0)), ..default() },
+            Sprite { color: lane_color(lane).with_alpha(0.3), custom_size: Some(Vec2::new(54.0, 24.0)), ..default() },
             Transform::from_xyz(lane_x(lane), HIT_LINE_Y, 0.4),
             LaneIndicator { lane }, GameEntity,
         ));
@@ -134,7 +145,7 @@ pub fn setup(mut commands: Commands) {
 // Systems
 // ---------------------------------------------------------------------------
 
-pub fn spawn_notes(time: Res<Time>, mut state: ResMut<GameState>, mut commands: Commands) {
+pub fn spawn_notes(time: Res<Time>, mut state: ResMut<GameState>, pixar_assets: Res<PixarAssets>, mut commands: Commands) {
     let dt = time.delta_secs();
     state.elapsed += dt;
     state.speed = BASE_SPEED + state.elapsed * SPEED_INCREASE;
@@ -143,11 +154,15 @@ pub fn spawn_notes(time: Res<Time>, mut state: ResMut<GameState>, mut commands: 
     if state.spawn_timer >= interval {
         state.spawn_timer = 0.0;
         let lane = rand::thread_rng().gen_range(0..LANE_COUNT);
-        commands.spawn((
-            Sprite { color: LANE_COLORS[lane], custom_size: Some(NOTE_SIZE), ..default() },
-            Transform::from_xyz(lane_x(lane), SPAWN_Y, 1.0),
-            Note { lane }, GameEntity,
-        ));
+        let color = lane_color(lane);
+        let size = NOTE_SIZE.x.min(NOTE_SIZE.y);
+        pixar::spawn_character(
+            &mut commands,
+            &pixar_assets,
+            &CharacterConfig::collectible(color, size),
+            Vec3::new(lane_x(lane), SPAWN_Y, 1.0),
+            (Note { lane }, GameEntity),
+        );
     }
 }
 

@@ -2,6 +2,8 @@ use bevy::prelude::*;
 use rand::Rng;
 
 use crate::BevyBridge;
+use crate::pixar::{self, PixarAssets, CharacterConfig, palette};
+use crate::asset_loader::CustomAssets;
 
 // ---------------------------------------------------------------------------
 // Constants
@@ -52,7 +54,14 @@ struct GameState {
 // Helpers
 // ---------------------------------------------------------------------------
 
-fn spawn_molecules(commands: &mut Commands, level: usize) {
+const MOLECULE_COLORS: [Color; 4] = [
+    palette::HERO_RED,
+    palette::HERO_BLUE,
+    palette::VILLAIN_GREEN,
+    palette::HERO_YELLOW,
+];
+
+fn spawn_molecules(commands: &mut Commands, pixar_assets: &PixarAssets, level: usize) {
     let mut rng = rand::thread_rng();
     let count = level + 1;
     let base_radius = 35.0 + level as f32 * 10.0;
@@ -61,17 +70,11 @@ fn spawn_molecules(commands: &mut Commands, level: usize) {
         let y = rng.gen_range(0.0..HALF_H * 0.6);
         let vx = rng.gen_range(-120.0..120.0);
         let vy = rng.gen_range(-80.0..80.0);
-        let colors = [
-            Color::srgb(1.0, 0.3, 0.3),
-            Color::srgb(0.3, 1.0, 0.5),
-            Color::srgb(0.3, 0.5, 1.0),
-            Color::srgb(1.0, 0.8, 0.2),
-        ];
-        let color = colors[i % colors.len()];
+        let color = MOLECULE_COLORS[i % MOLECULE_COLORS.len()];
         let r = base_radius;
-        commands.spawn((
-            Sprite { color, custom_size: Some(Vec2::splat(r * 2.0)), ..default() },
-            Transform::from_xyz(x, y, 0.5),
+        // Molecules are blobs with faces
+        let config = CharacterConfig::blob(color, r * 2.0);
+        pixar::spawn_character(commands, pixar_assets, &config, Vec3::new(x, y, 0.5), (
             Molecule { radius: r, vx, vy },
             GameEntity,
         ));
@@ -82,39 +85,45 @@ fn spawn_molecules(commands: &mut Commands, level: usize) {
 // Setup
 // ---------------------------------------------------------------------------
 
-pub fn setup(mut commands: Commands) {
+pub fn setup(mut commands: Commands, pixar_assets: Res<PixarAssets>, custom_assets: Res<CustomAssets>) {
     commands.insert_resource(GameState { score: 0, lives: 3, level: 0, invuln: 0.0 });
 
     // Background
-    commands.spawn((
-        Sprite { color: Color::srgb(0.03, 0.03, 0.1), custom_size: Some(Vec2::new(960.0, 640.0)), ..default() },
-        Transform::from_xyz(0.0, 0.0, -1.0),
-        GameEntity,
-    ));
+    if let Some(ref bg_handle) = custom_assets.background {
+        commands.spawn((
+            Sprite { image: bg_handle.clone(), custom_size: Some(Vec2::new(960.0, 640.0)), ..default() },
+            Transform::from_xyz(0.0, 0.0, -1.0),
+            GameEntity,
+        ));
+    } else {
+        commands.spawn((
+            Sprite { color: palette::NIGHT_BG, custom_size: Some(Vec2::new(960.0, 640.0)), ..default() },
+            Transform::from_xyz(0.0, 0.0, -1.0),
+            GameEntity,
+        ));
+    }
 
-    // Boundary walls (visual)
+    // Boundary walls (visual props)
     for (x, y, w, h) in [
         (0.0, HALF_H, HALF_W * 2.0 + 20.0, 10.0),
         (0.0, -HALF_H, HALF_W * 2.0 + 20.0, 10.0),
         (-HALF_W - 5.0, 0.0, 10.0, HALF_H * 2.0),
         (HALF_W + 5.0, 0.0, 10.0, HALF_H * 2.0),
     ] {
-        commands.spawn((
-            Sprite { color: Color::srgb(0.3, 0.3, 0.35), custom_size: Some(Vec2::new(w, h)), ..default() },
-            Transform::from_xyz(x, y, 0.1),
+        let config = CharacterConfig::prop(palette::SHADOW, Vec2::new(w, h), false);
+        pixar::spawn_character(&mut commands, &pixar_assets, &config, Vec3::new(x, y, 0.1), (
             GameEntity,
         ));
     }
 
-    // Player
-    commands.spawn((
-        Sprite { color: Color::srgb(0.2, 0.8, 0.4), custom_size: Some(Vec2::new(PLAYER_W, PLAYER_H)), ..default() },
-        Transform::from_xyz(0.0, PLAYER_Y, 1.0),
+    // Player (hero paddle)
+    let player_config = CharacterConfig::hero(palette::HERO_GREEN, Vec2::new(PLAYER_W, PLAYER_H));
+    pixar::spawn_character(&mut commands, &pixar_assets, &player_config, Vec3::new(0.0, PLAYER_Y, 1.0), (
         Player { x: 0.0 },
         GameEntity,
     ));
 
-    spawn_molecules(&mut commands, 0);
+    spawn_molecules(&mut commands, &pixar_assets, 0);
 
     // HUD
     commands.spawn((
@@ -143,6 +152,7 @@ pub fn player_input(
     mut pq: Query<(&mut Player, &mut Transform)>,
     mut commands: Commands,
     hq: Query<&Harpoon>,
+    pixar_assets: Res<PixarAssets>,
 ) {
     let dt = time.delta_secs();
     let Ok((mut player, mut tf)) = pq.get_single_mut() else { return };
@@ -154,9 +164,8 @@ pub fn player_input(
 
     // Fire harpoon (only one at a time)
     if keys.just_pressed(KeyCode::Space) && hq.is_empty() {
-        commands.spawn((
-            Sprite { color: Color::srgb(1.0, 1.0, 1.0), custom_size: Some(Vec2::new(HARPOON_W, 12.0)), ..default() },
-            Transform::from_xyz(player.x, PLAYER_Y + 15.0, 0.8),
+        let config = CharacterConfig::projectile(Color::WHITE, 12.0);
+        pixar::spawn_character(&mut commands, &pixar_assets, &config, Vec3::new(player.x, PLAYER_Y + 15.0, 0.8), (
             Harpoon { active: true },
             GameEntity,
         ));
@@ -207,6 +216,7 @@ pub fn check_harpoon_hit(
     mut state: ResMut<GameState>,
     hq: Query<(Entity, &Transform), With<Harpoon>>,
     mq: Query<(Entity, &Transform, &Molecule)>,
+    pixar_assets: Res<PixarAssets>,
 ) {
     for (he, htf) in &hq {
         for (me, mtf, mol) in &mq {
@@ -223,13 +233,10 @@ pub fn check_harpoon_hit(
                     let mut rng = rand::thread_rng();
                     let speed = rng.gen_range(80.0..160.0);
                     for dir in [-1.0f32, 1.0] {
-                        commands.spawn((
-                            Sprite {
-                                color: Color::srgb(rng.gen_range(0.4..1.0), rng.gen_range(0.3..0.8), rng.gen_range(0.3..1.0)),
-                                custom_size: Some(Vec2::splat(new_r * 2.0)),
-                                ..default()
-                            },
-                            Transform::from_xyz(mtf.translation.x + dir * new_r, mtf.translation.y, 0.5),
+                        let color = MOLECULE_COLORS[rng.gen_range(0..MOLECULE_COLORS.len())];
+                        let config = CharacterConfig::blob(color, new_r * 2.0);
+                        pixar::spawn_character(&mut commands, &pixar_assets, &config,
+                            Vec3::new(mtf.translation.x + dir * new_r, mtf.translation.y, 0.5), (
                             Molecule { radius: new_r, vx: dir * speed, vy: -mol.vy.abs().max(60.0) },
                             GameEntity,
                         ));
@@ -271,6 +278,7 @@ pub fn check_level_clear(
     mq: Query<&Molecule>,
     mut commands: Commands,
     mut next_state: ResMut<NextState<crate::AppState>>,
+    pixar_assets: Res<PixarAssets>,
 ) {
     if !mq.is_empty() { return; }
 
@@ -279,7 +287,7 @@ pub fn check_level_clear(
         next_state.set(crate::AppState::GameOver);
         return;
     }
-    spawn_molecules(&mut commands, state.level);
+    spawn_molecules(&mut commands, &pixar_assets, state.level);
 }
 
 pub fn update_score(state: Res<GameState>, mut bridge: ResMut<BevyBridge>) {

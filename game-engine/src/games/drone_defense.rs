@@ -2,6 +2,8 @@ use bevy::prelude::*;
 use rand::Rng;
 
 use crate::BevyBridge;
+use crate::pixar::{self, PixarAssets, CharacterConfig, palette};
+use crate::asset_loader::CustomAssets;
 
 // ---------------------------------------------------------------------------
 // Constants
@@ -56,27 +58,31 @@ struct GameState { score: i32, hp: i32, spawn_timer: f32 }
 // Setup
 // ---------------------------------------------------------------------------
 
-pub fn setup(mut commands: Commands) {
+pub fn setup(mut commands: Commands, pixar_assets: Res<PixarAssets>, custom_assets: Res<CustomAssets>) {
     commands.insert_resource(GameState { score: 0, hp: MAX_HP, spawn_timer: 0.0 });
 
     // Background
-    commands.spawn((
-        Sprite { color: Color::srgb(0.05, 0.05, 0.12), custom_size: Some(Vec2::new(960.0, 640.0)), ..default() },
-        Transform::from_xyz(0.0, 0.0, -1.0), GameEntity,
-    ));
+    let bg_sprite = if let Some(ref bg) = custom_assets.background {
+        Sprite { image: bg.clone(), custom_size: Some(Vec2::new(960.0, 640.0)), ..default() }
+    } else {
+        Sprite { color: palette::NIGHT_BG, custom_size: Some(Vec2::new(960.0, 640.0)), ..default() }
+    };
+    commands.spawn((bg_sprite, Transform::from_xyz(0.0, 0.0, -1.0), GameEntity));
 
     // Ground
     commands.spawn((
-        Sprite { color: Color::srgb(0.2, 0.35, 0.15), custom_size: Some(Vec2::new(960.0, 50.0)), ..default() },
+        Sprite { color: palette::GROUND_GREEN, custom_size: Some(Vec2::new(960.0, 50.0)), ..default() },
         Transform::from_xyz(0.0, GROUND_Y - 25.0, 0.0), GameEntity,
     ));
 
     // Player
-    commands.spawn((
-        Sprite { color: Color::srgb(0.3, 0.8, 0.5), custom_size: Some(PLAYER_SIZE), ..default() },
-        Transform::from_xyz(0.0, GROUND_Y + PLAYER_SIZE.y / 2.0, 1.0),
-        Player { vy: 0.0, fuel: MAX_FUEL, on_ground: true }, GameEntity,
-    ));
+    pixar::spawn_character(
+        &mut commands,
+        &pixar_assets,
+        &CharacterConfig::vehicle(palette::HERO_TEAL, PLAYER_SIZE),
+        Vec3::new(0.0, GROUND_Y + PLAYER_SIZE.y / 2.0, 1.0),
+        (Player { vy: 0.0, fuel: MAX_FUEL, on_ground: true }, GameEntity),
+    );
 
     // Fuel bar background
     commands.spawn((
@@ -85,7 +91,7 @@ pub fn setup(mut commands: Commands) {
     ));
     // Fuel bar fill
     commands.spawn((
-        Sprite { color: Color::srgb(0.2, 0.6, 1.0), custom_size: Some(Vec2::new(100.0, 8.0)), ..default() },
+        Sprite { color: palette::ELECTRIC_CYAN, custom_size: Some(Vec2::new(100.0, 8.0)), ..default() },
         Transform::from_xyz(0.0, HALF_H - 30.0, 1.0), FuelBar, GameEntity,
     ));
 
@@ -157,7 +163,7 @@ pub fn player_input(
     if shoot {
         // Fire rightward by default (keyboard), or toward cursor could be added
         commands.spawn((
-            Sprite { color: Color::srgb(1.0, 0.9, 0.3), custom_size: Some(BULLET_SIZE), ..default() },
+            Sprite { color: palette::ELECTRIC_CYAN, custom_size: Some(BULLET_SIZE), ..default() },
             Transform::from_xyz(tf.translation.x + 16.0, tf.translation.y, 0.5),
             Bullet { dx: BULLET_SPEED, dy: 0.0 }, GameEntity,
         ));
@@ -179,18 +185,20 @@ pub fn move_bullets(
     }
 }
 
-pub fn spawn_enemies(time: Res<Time>, mut state: ResMut<GameState>, mut commands: Commands) {
+pub fn spawn_enemies(time: Res<Time>, mut state: ResMut<GameState>, mut commands: Commands, pixar_assets: Res<PixarAssets>) {
     state.spawn_timer += time.delta_secs();
     if state.spawn_timer < SPAWN_INTERVAL { return; }
     state.spawn_timer = 0.0;
     let mut rng = rand::thread_rng();
     let side = if rng.gen_bool(0.5) { HALF_W + 20.0 } else { -HALF_W - 20.0 };
     let y = rng.gen_range(GROUND_Y + 40.0..HALF_H - 40.0);
-    commands.spawn((
-        Sprite { color: Color::srgb(0.9, 0.3, 0.2), custom_size: Some(ENEMY_SIZE), ..default() },
-        Transform::from_xyz(side, y, 0.5),
-        Enemy { time: 0.0, base_y: y }, GameEntity,
-    ));
+    pixar::spawn_character(
+        &mut commands,
+        &pixar_assets,
+        &CharacterConfig::enemy(palette::VILLAIN_RED, ENEMY_SIZE),
+        Vec3::new(side, y, 0.5),
+        (Enemy { time: 0.0, base_y: y }, GameEntity),
+    );
 }
 
 pub fn move_enemies(

@@ -2,6 +2,8 @@ use bevy::prelude::*;
 use rand::Rng;
 
 use crate::BevyBridge;
+use crate::pixar::{self, PixarAssets, CharacterConfig, palette};
+use crate::asset_loader::CustomAssets;
 
 // ---------------------------------------------------------------------------
 // Constants
@@ -59,7 +61,7 @@ struct GameState {
 // Setup
 // ---------------------------------------------------------------------------
 
-pub fn setup(mut commands: Commands) {
+pub fn setup(mut commands: Commands, pixar_assets: Res<PixarAssets>, custom_assets: Res<CustomAssets>) {
     commands.insert_resource(GameState {
         score: 0,
         hp: MAX_HP,
@@ -67,19 +69,21 @@ pub fn setup(mut commands: Commands) {
     });
 
     // Background
-    commands.spawn((
-        Sprite { color: Color::srgb(0.02, 0.02, 0.08), custom_size: Some(Vec2::new(960.0, 640.0)), ..default() },
-        Transform::from_xyz(0.0, 0.0, -1.0),
-        GameEntity,
-    ));
+    let bg_sprite = if let Some(ref bg) = custom_assets.background {
+        Sprite { image: bg.clone(), custom_size: Some(Vec2::new(960.0, 640.0)), ..default() }
+    } else {
+        Sprite { color: palette::NIGHT_BG, custom_size: Some(Vec2::new(960.0, 640.0)), ..default() }
+    };
+    commands.spawn((bg_sprite, Transform::from_xyz(0.0, 0.0, -1.0), GameEntity));
 
     // Player
-    commands.spawn((
-        Sprite { color: Color::srgb(0.3, 0.7, 1.0), custom_size: Some(PLAYER_SIZE), ..default() },
-        Transform::from_xyz(0.0, 0.0, 1.0),
-        Player { vx: 0.0, vy: 0.0 },
-        GameEntity,
-    ));
+    pixar::spawn_character(
+        &mut commands,
+        &pixar_assets,
+        &CharacterConfig::vehicle(palette::HERO_TEAL, PLAYER_SIZE),
+        Vec3::new(0.0, 0.0, 1.0),
+        (Player { vx: 0.0, vy: 0.0 }, GameEntity),
+    );
 
     // HUD - Score
     commands.spawn((
@@ -152,7 +156,7 @@ pub fn player_input(
         let dir_x = (angle + std::f32::consts::FRAC_PI_2).sin();
         let dir_y = (angle + std::f32::consts::FRAC_PI_2).cos();
         commands.spawn((
-            Sprite { color: Color::srgb(1.0, 1.0, 0.3), custom_size: Some(BULLET_SIZE), ..default() },
+            Sprite { color: palette::HERO_YELLOW, custom_size: Some(BULLET_SIZE), ..default() },
             Transform::from_xyz(tf.translation.x, tf.translation.y, 0.5),
             Bullet { dx: dir_x * BULLET_SPEED, dy: dir_y * BULLET_SPEED },
             GameEntity,
@@ -175,7 +179,7 @@ pub fn move_bullets(
     }
 }
 
-pub fn spawn_enemies(time: Res<Time>, mut state: ResMut<GameState>, mut commands: Commands) {
+pub fn spawn_enemies(time: Res<Time>, mut state: ResMut<GameState>, mut commands: Commands, pixar_assets: Res<PixarAssets>) {
     state.spawn_timer += time.delta_secs();
     if state.spawn_timer < SPAWN_INTERVAL { return; }
     state.spawn_timer = 0.0;
@@ -186,12 +190,13 @@ pub fn spawn_enemies(time: Res<Time>, mut state: ResMut<GameState>, mut commands
         2 => (-HALF_W - 20.0, rng.gen_range(-HALF_H..HALF_H)),
         _ => (HALF_W + 20.0, rng.gen_range(-HALF_H..HALF_H)),
     };
-    commands.spawn((
-        Sprite { color: Color::srgb(0.9, 0.2, 0.2), custom_size: Some(ENEMY_SIZE), ..default() },
-        Transform::from_xyz(x, y, 0.5),
-        Enemy,
-        GameEntity,
-    ));
+    pixar::spawn_character(
+        &mut commands,
+        &pixar_assets,
+        &CharacterConfig::enemy(palette::VILLAIN_RED, ENEMY_SIZE),
+        Vec3::new(x, y, 0.5),
+        (Enemy, GameEntity),
+    );
 }
 
 pub fn move_enemies(

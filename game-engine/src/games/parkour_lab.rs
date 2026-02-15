@@ -2,6 +2,8 @@ use bevy::prelude::*;
 use rand::Rng;
 
 use crate::BevyBridge;
+use crate::pixar::{self, PixarAssets, CharacterConfig, palette};
+use crate::asset_loader::CustomAssets;
 
 // Constants
 const GROUND_Y: f32 = -250.0;
@@ -48,23 +50,26 @@ struct MomentumText;
 struct GameState { distance: f32, spawn_timer: f32, score: i32 }
 
 // Setup
-pub fn setup(mut commands: Commands) {
+pub fn setup(mut commands: Commands, pixar_assets: Res<PixarAssets>, custom_assets: Res<CustomAssets>) {
     commands.insert_resource(GameState { distance: 0.0, spawn_timer: 0.0, score: 0 });
 
+    let bg_sprite = if let Some(ref bg) = custom_assets.background {
+        Sprite { image: bg.clone(), custom_size: Some(Vec2::new(960.0, 640.0)), ..default() }
+    } else {
+        Sprite { color: palette::NIGHT_BG, custom_size: Some(Vec2::new(960.0, 640.0)), ..default() }
+    };
+    commands.spawn((bg_sprite, Transform::from_xyz(0.0, 0.0, -1.0), GameEntity));
     commands.spawn((
-        Sprite { color: Color::srgb(0.06, 0.06, 0.14), custom_size: Some(Vec2::new(960.0, 640.0)), ..default() },
-        Transform::from_xyz(0.0, 0.0, -1.0), GameEntity,
-    ));
-    commands.spawn((
-        Sprite { color: Color::srgb(0.25, 0.22, 0.18), custom_size: Some(Vec2::new(960.0, 40.0)), ..default() },
+        Sprite { color: palette::GROUND_GREEN, custom_size: Some(Vec2::new(960.0, 40.0)), ..default() },
         Transform::from_xyz(0.0, GROUND_Y - 20.0, 0.0), GameEntity,
     ));
-    commands.spawn((
-        Sprite { color: Color::srgb(0.9, 0.5, 0.2), custom_size: Some(Vec2::new(PLAYER_W, PLAYER_H_RUN)), ..default() },
-        Transform::from_xyz(PLAYER_X, GROUND_Y + PLAYER_H_RUN / 2.0, 1.0),
-        Player { vy: 0.0, state: PlayerState::Running, momentum: 1.0, slide_timer: 0.0 },
-        GameEntity,
-    ));
+    pixar::spawn_character(
+        &mut commands,
+        &pixar_assets,
+        &CharacterConfig::hero(palette::HERO_ORANGE, Vec2::new(PLAYER_W, PLAYER_H_RUN)),
+        Vec3::new(PLAYER_X, GROUND_Y + PLAYER_H_RUN / 2.0, 1.0),
+        (Player { vy: 0.0, state: PlayerState::Running, momentum: 1.0, slide_timer: 0.0 }, GameEntity),
+    );
     commands.spawn((
         Text::new("Score: 0"),
         TextFont { font_size: 22.0, ..default() },
@@ -79,8 +84,8 @@ pub fn setup(mut commands: Commands) {
         Node { position_type: PositionType::Absolute, top: Val::Px(10.0), right: Val::Px(10.0), ..default() },
         MomentumText, GameEntity,
     ));
-    spawn_obstacle(&mut commands, 400.0);
-    spawn_obstacle(&mut commands, 750.0);
+    spawn_obstacle(&mut commands, &pixar_assets, 400.0);
+    spawn_obstacle(&mut commands, &pixar_assets, 750.0);
 }
 
 // Systems
@@ -159,12 +164,12 @@ pub fn scroll_world(
     }
 }
 
-pub fn spawn_obstacles(time: Res<Time>, mut state: ResMut<GameState>, pq: Query<&Player>, mut commands: Commands) {
+pub fn spawn_obstacles(time: Res<Time>, mut state: ResMut<GameState>, pq: Query<&Player>, mut commands: Commands, pixar_assets: Res<PixarAssets>) {
     let Ok(player) = pq.get_single() else { return };
     state.spawn_timer += BASE_SPEED * player.momentum * time.delta_secs();
     if state.spawn_timer >= OBSTACLE_GAP {
         state.spawn_timer = 0.0;
-        spawn_obstacle(&mut commands, HALF_W + 60.0);
+        spawn_obstacle(&mut commands, &pixar_assets, HALF_W + 60.0);
     }
 }
 
@@ -242,21 +247,21 @@ pub fn cleanup(mut commands: Commands, q: Query<Entity, With<GameEntity>>) {
 }
 
 // Helpers
-fn spawn_obstacle(commands: &mut Commands, x: f32) {
+fn spawn_obstacle(commands: &mut Commands, pixar_assets: &PixarAssets, x: f32) {
     let mut rng = rand::thread_rng();
     match rng.gen_range(0..3) {
         0 => { commands.spawn((
-            Sprite { color: Color::srgb(0.7, 0.35, 0.2), custom_size: Some(WALL_SIZE), ..default() },
+            pixar::round_sprite(pixar_assets, palette::VILLAIN_RED, WALL_SIZE),
             Transform::from_xyz(x, GROUND_Y + WALL_SIZE.y / 2.0, 0.5),
             Obstacle { kind: ObstacleKind::Wall, scored: false }, GameEntity,
         )); }
         1 => { commands.spawn((
-            Sprite { color: Color::srgb(0.4, 0.4, 0.7), custom_size: Some(BAR_SIZE), ..default() },
+            pixar::round_sprite(pixar_assets, palette::VILLAIN_PURPLE, BAR_SIZE),
             Transform::from_xyz(x, BAR_Y, 0.5),
             Obstacle { kind: ObstacleKind::Bar, scored: false }, GameEntity,
         )); }
         _ => { commands.spawn((
-            Sprite { color: Color::srgb(0.15, 0.1, 0.1), custom_size: Some(Vec2::new(GAP_WIDTH, 40.0)), ..default() },
+            Sprite { color: palette::NIGHT_BG, custom_size: Some(Vec2::new(GAP_WIDTH, 40.0)), ..default() },
             Transform::from_xyz(x, GROUND_Y - 20.0, 0.5),
             Obstacle { kind: ObstacleKind::Gap, scored: false }, GameEntity,
         )); }

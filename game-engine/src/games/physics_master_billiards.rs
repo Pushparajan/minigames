@@ -1,7 +1,7 @@
 use bevy::prelude::*;
-use rand::Rng;
-
 use crate::BevyBridge;
+use crate::pixar::{self, PixarAssets, CharacterConfig, palette};
+use crate::asset_loader::CustomAssets;
 
 // ---------------------------------------------------------------------------
 // Constants
@@ -57,61 +57,58 @@ fn any_moving(bq: &Query<(&Transform, &Ball)>) -> bool {
 // Setup
 // ---------------------------------------------------------------------------
 
-pub fn setup(mut commands: Commands) {
+pub fn setup(mut commands: Commands, pixar_assets: Res<PixarAssets>, custom_assets: Res<CustomAssets>) {
     commands.insert_resource(GameState {
         score: 0, pocketed: 0, dragging: false,
         drag_start: Vec2::ZERO, drag_end: Vec2::ZERO,
     });
 
-    // Table background
-    commands.spawn((
-        Sprite { color: Color::srgb(0.1, 0.45, 0.2), custom_size: Some(Vec2::new(TABLE_W, TABLE_H)), ..default() },
-        Transform::from_xyz(0.0, 0.0, 0.0),
+    // Table background (prop)
+    let table_config = CharacterConfig::prop(palette::GROUND_GREEN, Vec2::new(TABLE_W, TABLE_H), false);
+    pixar::spawn_character(&mut commands, &pixar_assets, &table_config, Vec3::new(0.0, 0.0, 0.0), (
         GameEntity,
     ));
-    // Borders
+
+    // Borders (props)
     for (x, y, w, h) in [
         (0.0, HALF_H + 8.0, TABLE_W + 32.0, 16.0),
         (0.0, -HALF_H - 8.0, TABLE_W + 32.0, 16.0),
         (-HALF_W - 8.0, 0.0, 16.0, TABLE_H + 32.0),
         (HALF_W + 8.0, 0.0, 16.0, TABLE_H + 32.0),
     ] {
-        commands.spawn((
-            Sprite { color: Color::srgb(0.35, 0.2, 0.1), custom_size: Some(Vec2::new(w, h)), ..default() },
-            Transform::from_xyz(x, y, 0.1),
+        let config = CharacterConfig::prop(palette::GROUND_BROWN, Vec2::new(w, h), false);
+        pixar::spawn_character(&mut commands, &pixar_assets, &config, Vec3::new(x, y, 0.1), (
             GameEntity,
         ));
     }
 
-    // Pockets (6 total)
+    // Pockets (6 total, dark props)
     let pocket_positions = [
         (-HALF_W, HALF_H), (0.0, HALF_H), (HALF_W, HALF_H),
         (-HALF_W, -HALF_H), (0.0, -HALF_H), (HALF_W, -HALF_H),
     ];
     for (px, py) in pocket_positions {
-        commands.spawn((
-            Sprite { color: Color::srgb(0.05, 0.05, 0.05), custom_size: Some(Vec2::splat(POCKET_R * 2.0)), ..default() },
-            Transform::from_xyz(px, py, 0.2),
+        let config = CharacterConfig::prop(palette::VILLAIN_DARK, Vec2::splat(POCKET_R * 2.0), true);
+        pixar::spawn_character(&mut commands, &pixar_assets, &config, Vec3::new(px, py, 0.2), (
             Pocket { x: px, y: py },
             GameEntity,
         ));
     }
 
-    // Cue ball
-    commands.spawn((
-        Sprite { color: Color::srgb(0.95, 0.95, 0.95), custom_size: Some(Vec2::splat(BALL_R * 2.0)), ..default() },
-        Transform::from_xyz(-HALF_W * 0.5, 0.0, 1.0),
+    // Cue ball (blob with eyes)
+    let cue_config = CharacterConfig::blob(Color::WHITE, BALL_R * 2.0);
+    pixar::spawn_character(&mut commands, &pixar_assets, &cue_config, Vec3::new(-HALF_W * 0.5, 0.0, 1.0), (
         Ball { vx: 0.0, vy: 0.0, is_cue: true, sunk: false },
         GameEntity,
     ));
 
-    // 15 colored balls in triangle
+    // 15 colored balls in triangle (blobs with faces)
     let colors = [
-        Color::srgb(0.9, 0.1, 0.1), Color::srgb(0.1, 0.1, 0.8), Color::srgb(0.9, 0.5, 0.0),
-        Color::srgb(0.1, 0.6, 0.1), Color::srgb(0.6, 0.1, 0.6), Color::srgb(0.8, 0.8, 0.1),
-        Color::srgb(0.8, 0.2, 0.2), Color::srgb(0.1, 0.1, 0.1), Color::srgb(0.9, 0.6, 0.2),
-        Color::srgb(0.2, 0.2, 0.8), Color::srgb(0.9, 0.3, 0.5), Color::srgb(0.4, 0.7, 0.3),
-        Color::srgb(0.7, 0.3, 0.1), Color::srgb(0.3, 0.6, 0.7), Color::srgb(0.6, 0.6, 0.0),
+        palette::HERO_RED, palette::HERO_BLUE, palette::HERO_ORANGE,
+        palette::HERO_GREEN, palette::VILLAIN_PURPLE, palette::HERO_YELLOW,
+        palette::HERO_RED, palette::VILLAIN_DARK, palette::HERO_ORANGE,
+        palette::HERO_BLUE, palette::HERO_RED, palette::HERO_GREEN,
+        palette::HERO_ORANGE, palette::HERO_TEAL, palette::HERO_YELLOW,
     ];
     let start_x = HALF_W * 0.3;
     let spacing = BALL_R * 2.2;
@@ -121,9 +118,8 @@ pub fn setup(mut commands: Commands) {
             if idx >= 15 { break; }
             let x = start_x + row as f32 * spacing;
             let y = (col as f32 - row as f32 / 2.0) * spacing;
-            commands.spawn((
-                Sprite { color: colors[idx], custom_size: Some(Vec2::splat(BALL_R * 2.0)), ..default() },
-                Transform::from_xyz(x, y, 1.0),
+            let config = CharacterConfig::blob(colors[idx], BALL_R * 2.0);
+            pixar::spawn_character(&mut commands, &pixar_assets, &config, Vec3::new(x, y, 1.0), (
                 Ball { vx: 0.0, vy: 0.0, is_cue: false, sunk: false },
                 GameEntity,
             ));
@@ -131,7 +127,7 @@ pub fn setup(mut commands: Commands) {
         }
     }
 
-    // Power line (aim visual)
+    // Power line (aim visual) - stays as-is
     commands.spawn((
         Sprite { color: Color::srgba(1.0, 1.0, 1.0, 0.4), custom_size: Some(Vec2::new(2.0, 0.0)), ..default() },
         Transform::from_xyz(0.0, 0.0, 2.0),
@@ -224,8 +220,6 @@ pub fn physics(
 ) {
     let dt = time.delta_secs();
 
-    // Move balls
-    let mut positions: Vec<(Entity, f32, f32, f32)> = Vec::new();
     // First pass: move and wall bounce
     for (mut ball, mut tf) in &mut bq {
         if ball.sunk { continue; }

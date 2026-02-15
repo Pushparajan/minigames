@@ -2,6 +2,8 @@ use bevy::prelude::*;
 use rand::Rng;
 
 use crate::BevyBridge;
+use crate::pixar::{self, PixarAssets, CharacterConfig, palette};
+use crate::asset_loader::CustomAssets;
 
 // ---------------------------------------------------------------------------
 // Constants
@@ -76,7 +78,7 @@ fn path_position(waypoints: &[Vec2], t: f32) -> Vec2 {
 // Setup
 // ---------------------------------------------------------------------------
 
-pub fn setup(mut commands: Commands) {
+pub fn setup(mut commands: Commands, pixar_assets: Res<PixarAssets>, custom_assets: Res<CustomAssets>) {
     let mut rng = rand::thread_rng();
 
     // Generate waypoints along a winding path
@@ -112,44 +114,56 @@ pub fn setup(mut commands: Commands) {
         ));
     }
 
-    // Obstacles (red zones at certain path positions)
+    // Obstacles (round props)
     let num_obs = rng.gen_range(5..9);
     for _ in 0..num_obs {
         let pt = rng.gen_range(2.0..(NUM_WAYPOINTS - 2) as f32);
         let pos = path_position(&wps, pt);
         commands.spawn((
-            Sprite { color: Color::srgba(0.9, 0.15, 0.15, 0.7), custom_size: Some(OBS_SIZE), ..default() },
+            pixar::round_sprite(&pixar_assets, palette::VILLAIN_RED, OBS_SIZE),
             Transform::from_xyz(pos.x, pos.y, 0.3),
             Obstacle { path_t: pt }, GameEntity,
         ));
     }
 
-    // Collectibles (green circles)
+    // Collectibles
     let num_col = rng.gen_range(8..14);
     for _ in 0..num_col {
         let pt = rng.gen_range(1.0..(NUM_WAYPOINTS - 1) as f32);
         let pos = path_position(&wps, pt);
         let offset_y = rng.gen_range(-20.0..20.0);
-        commands.spawn((
-            Sprite { color: Color::srgb(0.2, 0.9, 0.3), custom_size: Some(COLLECT_SIZE), ..default() },
-            Transform::from_xyz(pos.x, pos.y + offset_y, 0.3),
-            Collectible { path_t: pt }, GameEntity,
-        ));
+        let size = COLLECT_SIZE.x.min(COLLECT_SIZE.y);
+        pixar::spawn_character(
+            &mut commands,
+            &pixar_assets,
+            &CharacterConfig::collectible(palette::GOLD, size),
+            Vec3::new(pos.x, pos.y + offset_y, 0.3),
+            (Collectible { path_t: pt }, GameEntity),
+        );
     }
 
     // Background
-    commands.spawn((
-        Sprite { color: Color::srgb(0.07, 0.07, 0.15), custom_size: Some(Vec2::new(960.0, 640.0)), ..default() },
-        Transform::from_xyz(0.0, 0.0, -1.0), GameEntity,
-    ));
+    if let Some(ref bg) = custom_assets.background {
+        commands.spawn((
+            Sprite { image: bg.clone(), custom_size: Some(Vec2::new(960.0, 640.0)), ..default() },
+            Transform::from_xyz(0.0, 0.0, -1.0), GameEntity,
+        ));
+    } else {
+        commands.spawn((
+            Sprite { color: palette::SKY_BLUE, custom_size: Some(Vec2::new(960.0, 640.0)), ..default() },
+            Transform::from_xyz(0.0, 0.0, -1.0), GameEntity,
+        ));
+    }
 
     // Cable car
     let start = path_position(&wps, 0.0);
-    commands.spawn((
-        Sprite { color: Color::srgb(0.2, 0.6, 0.9), custom_size: Some(CAR_SIZE), ..default() },
-        Transform::from_xyz(start.x, start.y, 2.0),
-        CableCar { path_t: 0.0, velocity: 0.5, passengers: 5 }, GameEntity,
-    ));
+    pixar::spawn_character(
+        &mut commands,
+        &pixar_assets,
+        &CharacterConfig::vehicle(palette::HERO_ORANGE, CAR_SIZE),
+        Vec3::new(start.x, start.y, 2.0),
+        (CableCar { path_t: 0.0, velocity: 0.5, passengers: 5 }, GameEntity),
+    );
 
     commands.insert_resource(GameState { score: 0, waypoints: wps, finished: false });
 

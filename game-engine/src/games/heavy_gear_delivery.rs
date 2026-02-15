@@ -2,6 +2,8 @@ use bevy::prelude::*;
 use rand::Rng;
 
 use crate::BevyBridge;
+use crate::pixar::{self, PixarAssets, CharacterConfig, palette};
+use crate::asset_loader::CustomAssets;
 
 // ---------------------------------------------------------------------------
 // Constants
@@ -62,7 +64,7 @@ struct GameState {
 // Setup
 // ---------------------------------------------------------------------------
 
-pub fn setup(mut commands: Commands) {
+pub fn setup(mut commands: Commands, pixar_assets: Res<PixarAssets>, custom_assets: Res<CustomAssets>) {
     commands.insert_resource(GameState {
         distance: 0.0,
         scroll_offset: 0.0,
@@ -70,30 +72,39 @@ pub fn setup(mut commands: Commands) {
     });
 
     // Background
-    commands.spawn((
-        Sprite { color: Color::srgb(0.1, 0.08, 0.18), custom_size: Some(Vec2::new(960.0, 640.0)), ..default() },
-        Transform::from_xyz(0.0, 0.0, -1.0), GameEntity,
-    ));
+    if let Some(ref bg) = custom_assets.background {
+        commands.spawn((
+            Sprite { image: bg.clone(), custom_size: Some(Vec2::new(960.0, 640.0)), ..default() },
+            Transform::from_xyz(0.0, 0.0, -1.0), GameEntity,
+        ));
+    } else {
+        commands.spawn((
+            Sprite { color: palette::NIGHT_BG, custom_size: Some(Vec2::new(960.0, 640.0)), ..default() },
+            Transform::from_xyz(0.0, 0.0, -1.0), GameEntity,
+        ));
+    }
 
     // Terrain
     for i in 0..NUM_SEGMENTS {
         commands.spawn((
-            Sprite { color: Color::srgb(0.4, 0.3, 0.2), custom_size: Some(Vec2::new(SEGMENT_W + 2.0, 200.0)), ..default() },
+            Sprite { color: palette::GROUND_BROWN, custom_size: Some(Vec2::new(SEGMENT_W + 2.0, 200.0)), ..default() },
             Transform::from_xyz(0.0, GROUND_Y - 100.0, 0.0),
             TerrainSegment { index: i }, GameEntity,
         ));
     }
 
     // Truck
-    commands.spawn((
-        Sprite { color: Color::srgb(0.3, 0.5, 0.7), custom_size: Some(TRUCK_SIZE), ..default() },
-        Transform::from_xyz(TRUCK_X, GROUND_Y, 2.0),
-        Truck { velocity: 100.0 }, GameEntity,
-    ));
+    pixar::spawn_character(
+        &mut commands,
+        &pixar_assets,
+        &CharacterConfig::vehicle(palette::HERO_BLUE, TRUCK_SIZE),
+        Vec3::new(TRUCK_X, GROUND_Y, 2.0),
+        (Truck { velocity: 100.0 }, GameEntity),
+    );
 
     // Cargo (child visually but separate entity)
     commands.spawn((
-        Sprite { color: Color::srgb(0.8, 0.6, 0.2), custom_size: Some(CARGO_SIZE), ..default() },
+        Sprite { color: palette::HERO_ORANGE, custom_size: Some(CARGO_SIZE), ..default() },
         Transform::from_xyz(TRUCK_X, GROUND_Y + 30.0, 3.0),
         Cargo { balance: 0.0, hp: 100.0 }, GameEntity,
     ));

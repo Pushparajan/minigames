@@ -2,6 +2,8 @@ use bevy::prelude::*;
 use rand::Rng;
 
 use crate::BevyBridge;
+use crate::pixar::{self, PixarAssets, CharacterConfig, palette};
+use crate::asset_loader::CustomAssets;
 
 // ---------------------------------------------------------------------------
 // Constants
@@ -52,39 +54,50 @@ struct GameState {
 // Setup
 // ---------------------------------------------------------------------------
 
-pub fn setup(mut commands: Commands) {
+pub fn setup(mut commands: Commands, pixar_assets: Res<PixarAssets>, custom_assets: Res<CustomAssets>) {
     commands.insert_resource(GameState {
         score: 0, player_turn: true, dragging: false,
         drag_start: Vec2::ZERO, turn_timer: 0.0, fired: false,
     });
 
     // Background
-    commands.spawn((
-        Sprite { color: Color::srgb(0.06, 0.06, 0.14), custom_size: Some(Vec2::new(960.0, 640.0)), ..default() },
-        Transform::from_xyz(0.0, 0.0, -1.0), GameEntity,
-    ));
+    if let Some(ref bg) = custom_assets.background {
+        commands.spawn((
+            Sprite { image: bg.clone(), custom_size: Some(Vec2::new(960.0, 640.0)), ..default() },
+            Transform::from_xyz(0.0, 0.0, -1.0), GameEntity,
+        ));
+    } else {
+        commands.spawn((
+            Sprite { color: palette::NIGHT_BG, custom_size: Some(Vec2::new(960.0, 640.0)), ..default() },
+            Transform::from_xyz(0.0, 0.0, -1.0), GameEntity,
+        ));
+    }
 
     // Player platform + character
     commands.spawn((
         Sprite { color: Color::srgb(0.3, 0.3, 0.35), custom_size: Some(Vec2::new(80.0, 20.0)), ..default() },
         Transform::from_xyz(PLAYER_X, PLATFORM_Y, 0.0), GameEntity,
     ));
-    commands.spawn((
-        Sprite { color: Color::srgb(0.3, 0.6, 0.9), custom_size: Some(CHAR_SIZE), ..default() },
-        Transform::from_xyz(PLAYER_X, PLATFORM_Y + 30.0, 1.0),
-        Player { hp: 3 }, GameEntity,
-    ));
+    pixar::spawn_character(
+        &mut commands,
+        &pixar_assets,
+        &CharacterConfig::hero(palette::HERO_BLUE, CHAR_SIZE),
+        Vec3::new(PLAYER_X, PLATFORM_Y + 30.0, 1.0),
+        (Player { hp: 3 }, GameEntity),
+    );
 
     // Enemy platform + character
     commands.spawn((
         Sprite { color: Color::srgb(0.3, 0.3, 0.35), custom_size: Some(Vec2::new(80.0, 20.0)), ..default() },
         Transform::from_xyz(ENEMY_X, PLATFORM_Y, 0.0), GameEntity,
     ));
-    commands.spawn((
-        Sprite { color: Color::srgb(0.9, 0.25, 0.25), custom_size: Some(CHAR_SIZE), ..default() },
-        Transform::from_xyz(ENEMY_X, PLATFORM_Y + 30.0, 1.0),
-        EnemyAI { hp: 3 }, GameEntity,
-    ));
+    pixar::spawn_character(
+        &mut commands,
+        &pixar_assets,
+        &CharacterConfig::enemy(palette::VILLAIN_RED, CHAR_SIZE),
+        Vec3::new(ENEMY_X, PLATFORM_Y + 30.0, 1.0),
+        (EnemyAI { hp: 3 }, GameEntity),
+    );
 
     // Destructible blocks in the middle
     let mut rng = rand::thread_rng();
@@ -118,6 +131,7 @@ pub fn player_fire(
     mouse: Res<ButtonInput<MouseButton>>,
     windows: Query<&Window>,
     camera_q: Query<(&Camera, &GlobalTransform)>,
+    pixar_assets: Res<PixarAssets>,
     mut state: ResMut<GameState>,
     mut commands: Commands,
 ) {
@@ -140,7 +154,7 @@ pub fn player_fire(
             let vx = power * angle.cos();
             let vy = power * angle.sin();
             commands.spawn((
-                Sprite { color: Color::srgb(1.0, 0.9, 0.2), custom_size: Some(PROJ_SIZE), ..default() },
+                pixar::round_sprite(&pixar_assets, palette::HERO_BLUE, PROJ_SIZE),
                 Transform::from_xyz(PLAYER_X + 20.0, PLATFORM_Y + 40.0, 2.0),
                 Projectile { vx, vy, friendly: true }, GameEntity,
             ));
@@ -151,6 +165,7 @@ pub fn player_fire(
 
 pub fn ai_fire(
     time: Res<Time>,
+    pixar_assets: Res<PixarAssets>,
     mut state: ResMut<GameState>,
     mut commands: Commands,
 ) {
@@ -164,7 +179,7 @@ pub fn ai_fire(
         let vx = power * angle.cos();
         let vy = power * angle.sin();
         commands.spawn((
-            Sprite { color: Color::srgb(1.0, 0.4, 0.1), custom_size: Some(PROJ_SIZE), ..default() },
+            pixar::round_sprite(&pixar_assets, palette::VILLAIN_RED, PROJ_SIZE),
             Transform::from_xyz(ENEMY_X - 20.0, PLATFORM_Y + 40.0, 2.0),
             Projectile { vx, vy, friendly: false }, GameEntity,
         ));

@@ -1,7 +1,7 @@
 use bevy::prelude::*;
-use rand::Rng;
-
 use crate::BevyBridge;
+use crate::pixar::{self, PixarAssets, CharacterConfig, palette};
+use crate::asset_loader::CustomAssets;
 
 // ---------------------------------------------------------------------------
 // Constants
@@ -90,55 +90,50 @@ fn get_level(n: usize) -> LevelData {
     }
 }
 
-fn spawn_level(commands: &mut Commands, level: usize) {
+fn spawn_level(commands: &mut Commands, pixar_assets: &PixarAssets, level: usize) {
     let data = get_level(level);
 
     // Floor background
     for y in 0..ROWS {
         for x in 0..COLS {
-            commands.spawn((
-                Sprite { color: Color::srgb(0.1, 0.12, 0.18), custom_size: Some(Vec2::splat(TILE - 2.0)), ..default() },
-                Transform::from_translation(wp(x, y, 0.0)),
+            let config = CharacterConfig::prop(palette::LAB_BG, Vec2::splat(TILE - 2.0), false);
+            pixar::spawn_character(commands, pixar_assets, &config, wp(x, y, 0.0), (
                 GameEntity,
             ));
         }
     }
 
-    // Targets
+    // Targets (containers)
     for &(gx, gy) in &data.targets {
-        commands.spawn((
-            Sprite { color: Color::srgb(0.2, 0.5, 0.2), custom_size: Some(Vec2::splat(TILE - 6.0)), ..default() },
-            Transform::from_translation(wp(gx, gy, 0.1)),
+        let config = CharacterConfig::prop(palette::LEAF_GREEN, Vec2::splat(TILE - 6.0), false);
+        pixar::spawn_character(commands, pixar_assets, &config, wp(gx, gy, 0.1), (
             Target { gx, gy },
             GameEntity,
         ));
     }
 
-    // Walls
+    // Walls (pipes/containers)
     for &(gx, gy) in &data.walls {
-        commands.spawn((
-            Sprite { color: Color::srgb(0.3, 0.35, 0.45), custom_size: Some(Vec2::splat(TILE - 2.0)), ..default() },
-            Transform::from_translation(wp(gx, gy, 0.2)),
+        let config = CharacterConfig::prop(palette::SHADOW, Vec2::splat(TILE - 2.0), false);
+        pixar::spawn_character(commands, pixar_assets, &config, wp(gx, gy, 0.2), (
             Wall { gx, gy },
             GameEntity,
         ));
     }
 
-    // Orbs
+    // Orbs (water/liquid blobs)
     for &(gx, gy) in &data.orbs {
-        commands.spawn((
-            Sprite { color: Color::srgb(0.2, 0.6, 1.0), custom_size: Some(Vec2::splat(TILE - 12.0)), ..default() },
-            Transform::from_translation(wp(gx, gy, 0.5)),
+        let config = CharacterConfig::blob(palette::HERO_BLUE, TILE - 12.0);
+        pixar::spawn_character(commands, pixar_assets, &config, wp(gx, gy, 0.5), (
             Orb { gx, gy },
             GameEntity,
         ));
     }
 
-    // Player
+    // Player (hero style)
     let (px, py) = data.player;
-    commands.spawn((
-        Sprite { color: Color::srgb(1.0, 0.8, 0.2), custom_size: Some(Vec2::splat(TILE - 14.0)), ..default() },
-        Transform::from_translation(wp(px, py, 1.0)),
+    let config = CharacterConfig::hero(palette::HERO_YELLOW, Vec2::splat(TILE - 14.0));
+    pixar::spawn_character(commands, pixar_assets, &config, wp(px, py, 1.0), (
         Player { gx: px, gy: py },
         GameEntity,
     ));
@@ -148,17 +143,25 @@ fn spawn_level(commands: &mut Commands, level: usize) {
 // Setup
 // ---------------------------------------------------------------------------
 
-pub fn setup(mut commands: Commands) {
+pub fn setup(mut commands: Commands, pixar_assets: Res<PixarAssets>, custom_assets: Res<CustomAssets>) {
     commands.insert_resource(GameState { score: 0, level: 0, moves: 0, cooldown: 0.0 });
 
     // Background
-    commands.spawn((
-        Sprite { color: Color::srgb(0.04, 0.04, 0.08), custom_size: Some(Vec2::new(960.0, 640.0)), ..default() },
-        Transform::from_xyz(0.0, 0.0, -1.0),
-        GameEntity,
-    ));
+    if let Some(ref bg_handle) = custom_assets.background {
+        commands.spawn((
+            Sprite { image: bg_handle.clone(), custom_size: Some(Vec2::new(960.0, 640.0)), ..default() },
+            Transform::from_xyz(0.0, 0.0, -1.0),
+            GameEntity,
+        ));
+    } else {
+        commands.spawn((
+            Sprite { color: palette::LAB_BG, custom_size: Some(Vec2::new(960.0, 640.0)), ..default() },
+            Transform::from_xyz(0.0, 0.0, -1.0),
+            GameEntity,
+        ));
+    }
 
-    spawn_level(&mut commands, 0);
+    spawn_level(&mut commands, &pixar_assets, 0);
 
     // HUD
     commands.spawn((
@@ -251,6 +254,7 @@ pub fn check_win(
     mut commands: Commands,
     entities: Query<Entity, With<GameEntity>>,
     mut next_state: ResMut<NextState<crate::AppState>>,
+    pixar_assets: Res<PixarAssets>,
 ) {
     let all_on_target = tq.iter().all(|target| {
         oq.iter().any(|orb| orb.gx == target.gx && orb.gy == target.gy)
@@ -271,12 +275,12 @@ pub fn check_win(
 
     // Background
     commands.spawn((
-        Sprite { color: Color::srgb(0.04, 0.04, 0.08), custom_size: Some(Vec2::new(960.0, 640.0)), ..default() },
+        Sprite { color: palette::LAB_BG, custom_size: Some(Vec2::new(960.0, 640.0)), ..default() },
         Transform::from_xyz(0.0, 0.0, -1.0),
         GameEntity,
     ));
 
-    spawn_level(&mut commands, state.level);
+    spawn_level(&mut commands, &pixar_assets, state.level);
 
     // Re-spawn HUD
     commands.spawn((
@@ -292,7 +296,6 @@ pub fn check_win(
 pub fn update_visuals(
     pq: Query<&Player>,
     mut ptf: Query<&mut Transform, With<Player>>,
-    oq: Query<&Orb>,
     mut otf: Query<(&Orb, &mut Transform), Without<Player>>,
 ) {
     if let Ok(p) = pq.get_single() {

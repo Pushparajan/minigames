@@ -2,6 +2,8 @@ use bevy::prelude::*;
 use rand::Rng;
 
 use crate::BevyBridge;
+use crate::pixar::{self, PixarAssets, CharacterConfig, palette};
+use crate::asset_loader::CustomAssets;
 
 // ---------------------------------------------------------------------------
 // Constants
@@ -60,14 +62,21 @@ struct GameState {
 // Setup
 // ---------------------------------------------------------------------------
 
-pub fn setup(mut commands: Commands) {
+pub fn setup(mut commands: Commands, pixar_assets: Res<PixarAssets>, custom_assets: Res<CustomAssets>) {
     commands.insert_resource(GameState { score: 0, spawn_timer: 0.0 });
 
     // Background
-    commands.spawn((
-        Sprite { color: Color::srgb(0.08, 0.08, 0.12), custom_size: Some(Vec2::new(960.0, 640.0)), ..default() },
-        Transform::from_xyz(0.0, 0.0, -1.0), GameEntity,
-    ));
+    if let Some(ref bg) = custom_assets.background {
+        commands.spawn((
+            Sprite { image: bg.clone(), custom_size: Some(Vec2::new(960.0, 640.0)), ..default() },
+            Transform::from_xyz(0.0, 0.0, -1.0), GameEntity,
+        ));
+    } else {
+        commands.spawn((
+            Sprite { color: palette::LAB_BG, custom_size: Some(Vec2::new(960.0, 640.0)), ..default() },
+            Transform::from_xyz(0.0, 0.0, -1.0), GameEntity,
+        ));
+    }
 
     // Cover blocks
     for &cx in &COVER_POSITIONS {
@@ -78,12 +87,13 @@ pub fn setup(mut commands: Commands) {
     }
 
     // Player
-    commands.spawn((
-        Sprite { color: Color::srgb(0.3, 0.6, 0.9), custom_size: Some(PLAYER_SIZE), ..default() },
-        Transform::from_xyz(COVER_POSITIONS[1], COVER_Y, 1.0),
-        Player { cover_index: 1, exposed: false, hp: 5, ammo: 15 },
-        GameEntity,
-    ));
+    pixar::spawn_character(
+        &mut commands,
+        &pixar_assets,
+        &CharacterConfig::hero(palette::HERO_GREEN, PLAYER_SIZE),
+        Vec3::new(COVER_POSITIONS[1], COVER_Y, 1.0),
+        (Player { cover_index: 1, exposed: false, hp: 5, ammo: 15 }, GameEntity),
+    );
 
     // HUD
     commands.spawn((
@@ -102,6 +112,7 @@ pub fn setup(mut commands: Commands) {
 pub fn player_input(
     keys: Res<ButtonInput<KeyCode>>,
     mouse: Res<ButtonInput<MouseButton>>,
+    pixar_assets: Res<PixarAssets>,
     mut player_q: Query<(&mut Player, &mut Transform)>,
     mut commands: Commands,
 ) {
@@ -122,7 +133,7 @@ pub fn player_input(
         {
             p.ammo -= 1;
             commands.spawn((
-                Sprite { color: Color::srgb(1.0, 1.0, 0.3), custom_size: Some(BULLET_SIZE), ..default() },
+                Sprite { color: palette::HERO_YELLOW, custom_size: Some(BULLET_SIZE), ..default() },
                 Transform::from_xyz(tf.translation.x, tf.translation.y + 25.0, 2.0),
                 Bullet { friendly: true, vy: BULLET_SPEED }, GameEntity,
             ));
@@ -135,18 +146,19 @@ pub fn player_input(
     }
 }
 
-pub fn spawn_enemies(time: Res<Time>, mut state: ResMut<GameState>, mut commands: Commands) {
+pub fn spawn_enemies(time: Res<Time>, mut state: ResMut<GameState>, pixar_assets: Res<PixarAssets>, mut commands: Commands) {
     state.spawn_timer += time.delta_secs();
     if state.spawn_timer >= SPAWN_INTERVAL {
         state.spawn_timer = 0.0;
         let mut rng = rand::thread_rng();
         let x = rng.gen_range(-300.0..300.0);
-        commands.spawn((
-            Sprite { color: Color::srgb(0.9, 0.2, 0.2), custom_size: Some(ENEMY_SIZE), ..default() },
-            Transform::from_xyz(x, 320.0, 1.0),
-            Enemy { hp: 1, shoot_timer: rng.gen_range(0.5..ENEMY_SHOOT_INTERVAL) },
-            GameEntity,
-        ));
+        pixar::spawn_character(
+            &mut commands,
+            &pixar_assets,
+            &CharacterConfig::enemy(palette::VILLAIN_RED, ENEMY_SIZE),
+            Vec3::new(x, 320.0, 1.0),
+            (Enemy { hp: 1, shoot_timer: rng.gen_range(0.5..ENEMY_SHOOT_INTERVAL) }, GameEntity),
+        );
     }
 }
 
@@ -165,7 +177,7 @@ pub fn move_enemies(
             if e.shoot_timer <= 0.0 {
                 e.shoot_timer = ENEMY_SHOOT_INTERVAL;
                 commands.spawn((
-                    Sprite { color: Color::srgb(1.0, 0.4, 0.1), custom_size: Some(BULLET_SIZE), ..default() },
+                    Sprite { color: palette::VILLAIN_RED, custom_size: Some(BULLET_SIZE), ..default() },
                     Transform::from_xyz(tf.translation.x, tf.translation.y - 15.0, 2.0),
                     Bullet { friendly: false, vy: -BULLET_SPEED * 0.6 }, GameEntity,
                 ));

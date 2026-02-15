@@ -2,7 +2,9 @@ use bevy::prelude::*;
 use bevy::window::{PresentMode, WindowPlugin};
 use wasm_bindgen::prelude::*;
 
+pub mod asset_loader;
 pub mod games;
+pub mod pixar;
 
 use games::GamePlugin;
 
@@ -105,6 +107,12 @@ pub fn init_engine(canvas_id: &str) {
 
     // -- Game plugins ---------------------------------------------------
     app.add_plugins(GamePlugin);
+
+    // -- Pixar-style character rendering --------------------------------
+    app.add_plugins(pixar::PixarPlugin);
+
+    // -- Runtime asset uploads (sprites, .glb/.gltf) --------------------
+    app.add_plugins(asset_loader::AssetLoaderPlugin);
 
     // -- Startup: spawn a 2‑D camera that persists across states --------
     app.add_systems(Startup, setup_camera);

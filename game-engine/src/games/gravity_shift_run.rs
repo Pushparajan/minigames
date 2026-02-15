@@ -2,6 +2,8 @@ use bevy::prelude::*;
 use rand::Rng;
 
 use crate::BevyBridge;
+use crate::pixar::{self, PixarAssets, CharacterConfig, palette};
+use crate::asset_loader::CustomAssets;
 
 // ---------------------------------------------------------------------------
 // Constants
@@ -45,33 +47,37 @@ struct GameState { scroll_x: f32, spawn_timer: f32 }
 // Setup
 // ---------------------------------------------------------------------------
 
-pub fn setup(mut commands: Commands) {
+pub fn setup(mut commands: Commands, pixar_assets: Res<PixarAssets>, custom_assets: Res<CustomAssets>) {
     commands.insert_resource(GameState { scroll_x: 0.0, spawn_timer: 0.0 });
 
     // Background
-    commands.spawn((
-        Sprite { color: Color::srgb(0.04, 0.04, 0.1), custom_size: Some(Vec2::new(960.0, 640.0)), ..default() },
-        Transform::from_xyz(0.0, 0.0, -1.0), GameEntity,
-    ));
+    let bg_sprite = if let Some(ref bg) = custom_assets.background {
+        Sprite { image: bg.clone(), custom_size: Some(Vec2::new(960.0, 640.0)), ..default() }
+    } else {
+        Sprite { color: palette::NIGHT_BG, custom_size: Some(Vec2::new(960.0, 640.0)), ..default() }
+    };
+    commands.spawn((bg_sprite, Transform::from_xyz(0.0, 0.0, -1.0), GameEntity));
 
     // Ceiling
     commands.spawn((
-        Sprite { color: Color::srgb(0.35, 0.35, 0.4), custom_size: Some(Vec2::new(960.0, BORDER_THICKNESS)), ..default() },
+        Sprite { color: palette::GROUND_GREEN, custom_size: Some(Vec2::new(960.0, BORDER_THICKNESS)), ..default() },
         Transform::from_xyz(0.0, CEILING_Y + BORDER_THICKNESS / 2.0, 0.0), Border, GameEntity,
     ));
 
     // Floor
     commands.spawn((
-        Sprite { color: Color::srgb(0.35, 0.35, 0.4), custom_size: Some(Vec2::new(960.0, BORDER_THICKNESS)), ..default() },
+        Sprite { color: palette::GROUND_GREEN, custom_size: Some(Vec2::new(960.0, BORDER_THICKNESS)), ..default() },
         Transform::from_xyz(0.0, FLOOR_Y - BORDER_THICKNESS / 2.0, 0.0), Border, GameEntity,
     ));
 
     // Player
-    commands.spawn((
-        Sprite { color: Color::srgb(0.3, 0.9, 0.5), custom_size: Some(PLAYER_SIZE), ..default() },
-        Transform::from_xyz(PLAYER_X, 0.0, 1.0),
-        Player { vy: 0.0, gravity_dir: -1.0 }, GameEntity,
-    ));
+    pixar::spawn_character(
+        &mut commands,
+        &pixar_assets,
+        &CharacterConfig::hero(palette::HERO_PURPLE, PLAYER_SIZE),
+        Vec3::new(PLAYER_X, 0.0, 1.0),
+        (Player { vy: 0.0, gravity_dir: -1.0 }, GameEntity),
+    );
 
     // HUD
     commands.spawn((
@@ -83,8 +89,8 @@ pub fn setup(mut commands: Commands) {
     ));
 
     // Initial obstacles
-    spawn_wall_pair(&mut commands, 300.0);
-    spawn_wall_pair(&mut commands, 600.0);
+    spawn_wall_pair(&mut commands, &pixar_assets, 300.0);
+    spawn_wall_pair(&mut commands, &pixar_assets, 600.0);
 }
 
 // ---------------------------------------------------------------------------
@@ -153,11 +159,11 @@ pub fn scroll_world(
     }
 }
 
-pub fn spawn_obstacles(time: Res<Time>, mut state: ResMut<GameState>, mut commands: Commands) {
+pub fn spawn_obstacles(time: Res<Time>, mut state: ResMut<GameState>, mut commands: Commands, pixar_assets: Res<PixarAssets>) {
     state.spawn_timer += SCROLL_SPEED * time.delta_secs();
     if state.spawn_timer >= SPAWN_DISTANCE {
         state.spawn_timer = 0.0;
-        spawn_wall_pair(&mut commands, HALF_W + 60.0);
+        spawn_wall_pair(&mut commands, &pixar_assets, HALF_W + 60.0);
     }
 }
 
@@ -205,7 +211,7 @@ pub fn cleanup(mut commands: Commands, q: Query<Entity, With<GameEntity>>) {
 // Helpers
 // ---------------------------------------------------------------------------
 
-fn spawn_wall_pair(commands: &mut Commands, x: f32) {
+fn spawn_wall_pair(commands: &mut Commands, pixar_assets: &PixarAssets, x: f32) {
     let mut rng = rand::thread_rng();
     let gap_center = rng.gen_range(FLOOR_Y + 80.0..CEILING_Y - 80.0);
     let gap_top = gap_center + GAP_HEIGHT / 2.0;
@@ -215,7 +221,7 @@ fn spawn_wall_pair(commands: &mut Commands, x: f32) {
     let top_h = CEILING_Y - gap_top;
     if top_h > 2.0 {
         commands.spawn((
-            Sprite { color: Color::srgb(0.7, 0.3, 0.3), custom_size: Some(Vec2::new(WALL_WIDTH, top_h)), ..default() },
+            pixar::round_sprite(pixar_assets, palette::VILLAIN_RED, Vec2::new(WALL_WIDTH, top_h)),
             Transform::from_xyz(x, gap_top + top_h / 2.0, 0.5), Obstacle, GameEntity,
         ));
     }
@@ -224,7 +230,7 @@ fn spawn_wall_pair(commands: &mut Commands, x: f32) {
     let bot_h = gap_bot - FLOOR_Y;
     if bot_h > 2.0 {
         commands.spawn((
-            Sprite { color: Color::srgb(0.7, 0.3, 0.3), custom_size: Some(Vec2::new(WALL_WIDTH, bot_h)), ..default() },
+            pixar::round_sprite(pixar_assets, palette::VILLAIN_RED, Vec2::new(WALL_WIDTH, bot_h)),
             Transform::from_xyz(x, FLOOR_Y + bot_h / 2.0, 0.5), Obstacle, GameEntity,
         ));
     }
