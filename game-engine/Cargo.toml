@@ -11,15 +11,12 @@ bevy = { version = "0.15", default-features = false, features = [
     "bevy_asset",
     "bevy_color",
     "bevy_core_pipeline",
-    "bevy_math",
     "bevy_render",
     "bevy_sprite",
     "bevy_text",
     "bevy_ui",
     "bevy_winit",
-    "bevy_input",
     "bevy_state",
-    "bevy_log",
     "default_font",
     "png",
     "webgl2",
@@ -37,7 +34,9 @@ js-sys = "0.3"
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 serde-wasm-bindgen = "0.6"
-rand = { version = "0.8", features = ["wasm-bindgen"] }
+rand = "0.8"
+getrandom_02 = { package = "getrandom", version = "0.2", features = ["js"] }
+getrandom = { version = "0.3", features = ["wasm_js"] }
 
 [profile.release]
 opt-level = "s"
