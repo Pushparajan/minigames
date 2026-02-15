@@ -8,14 +8,14 @@
  * Games: VoltageRacer, RocketLabLander, GravityGolfPlanets
  */
 
-import { useRef, useState, useCallback, useMemo, useEffect } from "react";
+import { useRef, useState, useCallback, useMemo, useEffect, Suspense } from "react";
 import { useFrame } from "@react-three/fiber";
 import { Physics, RigidBody, CuboidCollider } from "@react-three/rapier";
 import type { RapierRigidBody } from "@react-three/rapier";
 import PhysicsObstacle from "../physics/PhysicsObstacle";
 import PhysicsCollectible from "../physics/PhysicsCollectible";
 import DefaultPixarCharacter from "../physics/DefaultPixarCharacter";
-import { Suspense } from "react";
+import ScoreHUD from "../physics/ScoreHUD";
 import CharacterModel from "../CharacterModel";
 
 interface VehicleSceneProps {
@@ -23,8 +23,6 @@ interface VehicleSceneProps {
   onScore?: (score: number) => void;
   color?: string;
 }
-
-const vehicleKeys = new Set<string>();
 
 function VehicleBody({
   modelUrl,
@@ -34,31 +32,37 @@ function VehicleBody({
   color: string;
 }) {
   const ref = useRef<RapierRigidBody>(null!);
+  const keysRef = useRef(new Set<string>());
 
   useEffect(() => {
-    const down = (e: KeyboardEvent) => vehicleKeys.add(e.code);
-    const up = (e: KeyboardEvent) => vehicleKeys.delete(e.code);
+    const keys = keysRef.current;
+    const down = (e: KeyboardEvent) => keys.add(e.code);
+    const up = (e: KeyboardEvent) => keys.delete(e.code);
+    const blur = () => keys.clear();
     window.addEventListener("keydown", down);
     window.addEventListener("keyup", up);
+    window.addEventListener("blur", blur);
     return () => {
       window.removeEventListener("keydown", down);
       window.removeEventListener("keyup", up);
-      vehicleKeys.clear();
+      window.removeEventListener("blur", blur);
+      keys.clear();
     };
   }, []);
 
   useFrame(() => {
     if (!ref.current) return;
+    const keys = keysRef.current;
 
     let thrust = 0;
     let torque = 0;
     const power = 0.15;
     const turnPower = 0.04;
 
-    if (vehicleKeys.has("ArrowUp") || vehicleKeys.has("KeyW")) thrust += power;
-    if (vehicleKeys.has("ArrowDown") || vehicleKeys.has("KeyS")) thrust -= power * 0.6;
-    if (vehicleKeys.has("ArrowLeft") || vehicleKeys.has("KeyA")) torque += turnPower;
-    if (vehicleKeys.has("ArrowRight") || vehicleKeys.has("KeyD")) torque -= turnPower;
+    if (keys.has("ArrowUp") || keys.has("KeyW")) thrust += power;
+    if (keys.has("ArrowDown") || keys.has("KeyS")) thrust -= power * 0.6;
+    if (keys.has("ArrowLeft") || keys.has("KeyA")) torque += turnPower;
+    if (keys.has("ArrowRight") || keys.has("KeyD")) torque -= turnPower;
 
     if (thrust !== 0) {
       // Apply force in the local forward direction
@@ -157,6 +161,9 @@ export default function VehicleScene({
       <ambientLight intensity={0.4} />
       <directionalLight position={[5, 12, 8]} intensity={0.9} castShadow />
       <directionalLight position={[-3, 6, -5]} intensity={0.25} color="#ffaa66" />
+
+      {/* In-scene score */}
+      <ScoreHUD score={score} label="Race" />
 
       {/* Ground / track surface */}
       <PhysicsObstacle

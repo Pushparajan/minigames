@@ -12,6 +12,7 @@ import { Physics, RigidBody, CuboidCollider } from "@react-three/rapier";
 import PhysicsCharacter from "../physics/PhysicsCharacter";
 import PhysicsObstacle from "../physics/PhysicsObstacle";
 import PhysicsCollectible from "../physics/PhysicsCollectible";
+import ScoreHUD from "../physics/ScoreHUD";
 
 interface PuzzleSceneProps {
   modelUrl?: string;
@@ -74,6 +75,9 @@ export default function PuzzleScene({
       <directionalLight position={[4, 10, 6]} intensity={0.8} castShadow />
       <directionalLight position={[-3, 5, -4]} intensity={0.25} color="#aaccff" />
       <hemisphereLight color="#e0e0ff" groundColor="#1a1a2a" intensity={0.25} />
+
+      {/* In-scene score */}
+      <ScoreHUD score={score} label="Puzzle" />
 
       {/* Player */}
       <PhysicsCharacter

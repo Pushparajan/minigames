@@ -13,6 +13,7 @@ import PhysicsCharacter from "../physics/PhysicsCharacter";
 import PhysicsObstacle from "../physics/PhysicsObstacle";
 import PhysicsCollectible from "../physics/PhysicsCollectible";
 import DefaultPixarCharacter from "../physics/DefaultPixarCharacter";
+import ScoreHUD from "../physics/ScoreHUD";
 import { RigidBody, BallCollider } from "@react-three/rapier";
 
 interface ArenaSceneProps {
@@ -82,6 +83,9 @@ export default function ArenaScene({
       <directionalLight position={[8, 12, 6]} intensity={0.85} castShadow />
       <directionalLight position={[-4, 6, -6]} intensity={0.3} color="#8866ff" />
       <pointLight position={[0, 8, 0]} intensity={0.3} color="#ff8844" />
+
+      {/* In-scene score */}
+      <ScoreHUD score={score} label="Arena" />
 
       {/* Player */}
       <PhysicsCharacter

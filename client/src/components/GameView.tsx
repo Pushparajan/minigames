@@ -136,7 +136,7 @@ export default function GameView({ gameId, onExit }: GameViewProps) {
           onClick={() => setShow3D((v) => !v)}
           style={{ fontSize: 12, padding: "2px 8px" }}
         >
-          {show3D ? "2D Mode" : "3D Mode"}
+          {show3D ? "Switch to 2D" : "Switch to 3D"}
         </button>
 
         <span id="hud-score" role="status" aria-live="polite">

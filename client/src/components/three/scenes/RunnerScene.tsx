@@ -7,13 +7,12 @@
  * Games: AlgorithmRunner, TidalWaves, WindTurbineFlyer
  */
 
-import { useRef, useState, useCallback, useMemo } from "react";
-import { useFrame } from "@react-three/fiber";
-import { Physics, RigidBody, CuboidCollider } from "@react-three/rapier";
-import type { RapierRigidBody } from "@react-three/rapier";
+import { useState, useCallback, useMemo } from "react";
+import { Physics } from "@react-three/rapier";
 import PhysicsCharacter from "../physics/PhysicsCharacter";
 import PhysicsCollectible from "../physics/PhysicsCollectible";
 import PhysicsObstacle from "../physics/PhysicsObstacle";
+import ScoreHUD from "../physics/ScoreHUD";
 
 interface RunnerSceneProps {
   modelUrl?: string;
@@ -26,17 +25,6 @@ interface PlatformDef {
   x: number;
   width: number;
   y: number;
-}
-
-let nextId = 0;
-
-function makePlatform(x: number): PlatformDef {
-  return {
-    id: nextId++,
-    x,
-    width: 3 + Math.random() * 4,
-    y: -0.5 + Math.random() * 2,
-  };
 }
 
 export default function RunnerScene({
@@ -54,14 +42,21 @@ export default function RunnerScene({
     });
   }, [onScore]);
 
-  // Generate a static set of platforms
+  // Generate a static set of platforms.
+  // IDs are local to this useMemo — no module-level counter.
   const platforms = useMemo(() => {
     const arr: PlatformDef[] = [];
+    let id = 0;
     // Ground
-    arr.push({ id: nextId++, x: 0, width: 200, y: -2 });
+    arr.push({ id: id++, x: 0, width: 200, y: -2 });
     // Elevated platforms
     for (let i = 0; i < 20; i++) {
-      arr.push(makePlatform(4 + i * 5));
+      arr.push({
+        id: id++,
+        x: 4 + i * 5,
+        width: 3 + Math.random() * 4,
+        y: -0.5 + Math.random() * 2,
+      });
     }
     return arr;
   }, []);
@@ -82,6 +77,9 @@ export default function RunnerScene({
       <ambientLight intensity={0.4} />
       <directionalLight position={[10, 15, 5]} intensity={0.9} castShadow />
       <directionalLight position={[-5, 5, -5]} intensity={0.25} color="#6688ff" />
+
+      {/* In-scene score */}
+      <ScoreHUD score={score} label="Runner" />
 
       {/* Player */}
       <PhysicsCharacter

@@ -32,16 +32,6 @@ interface PhysicsCharacterProps {
   modelScale?: number;
 }
 
-// Key state tracked outside React renders for low-latency input
-const keys = new Set<string>();
-
-function handleKeyDown(e: KeyboardEvent) {
-  keys.add(e.code);
-}
-function handleKeyUp(e: KeyboardEvent) {
-  keys.delete(e.code);
-}
-
 export default function PhysicsCharacter({
   modelUrl,
   position = [0, 2, 0],
@@ -54,13 +44,23 @@ export default function PhysicsCharacter({
   const rigidBody = useRef<RapierRigidBody>(null!);
   const [grounded, setGrounded] = useState(false);
 
-  // Register global key listeners once
+  // Per-instance key set avoids conflicts between multiple instances
+  const keysRef = useRef(new Set<string>());
+
   useEffect(() => {
+    const keys = keysRef.current;
+    const handleKeyDown = (e: KeyboardEvent) => keys.add(e.code);
+    const handleKeyUp = (e: KeyboardEvent) => keys.delete(e.code);
+    // Clear all keys when window loses focus to prevent "stuck" keys
+    const handleBlur = () => keys.clear();
+
     window.addEventListener("keydown", handleKeyDown);
     window.addEventListener("keyup", handleKeyUp);
+    window.addEventListener("blur", handleBlur);
     return () => {
       window.removeEventListener("keydown", handleKeyDown);
       window.removeEventListener("keyup", handleKeyUp);
+      window.removeEventListener("blur", handleBlur);
       keys.clear();
     };
   }, []);
@@ -68,39 +68,24 @@ export default function PhysicsCharacter({
   // Every frame: read keys → set velocity
   useFrame(() => {
     if (!rigidBody.current) return;
+    const keys = keysRef.current;
     const vel = rigidBody.current.linvel();
 
     let moveX = 0;
-    let moveZ = 0;
 
     if (keys.has("ArrowLeft") || keys.has("KeyA")) moveX -= 1;
     if (keys.has("ArrowRight") || keys.has("KeyD")) moveX += 1;
-    if (keys.has("ArrowUp") || keys.has("KeyW")) moveZ -= 1;
-    if (keys.has("ArrowDown") || keys.has("KeyS")) moveZ += 1;
-
-    // Normalise diagonal movement
-    const len = Math.sqrt(moveX * moveX + moveZ * moveZ);
-    if (len > 0) {
-      moveX = (moveX / len) * speed;
-      moveZ = (moveZ / len) * speed;
-    }
 
     if (moveAxes === "xy") {
-      // Side-scroller: X horizontal, Y vertical (gravity), Z unused
-      let moveY = 0;
-      if (keys.has("ArrowUp") || keys.has("KeyW")) moveY = 1;
-      if (keys.has("ArrowDown") || keys.has("KeyS")) moveY = -1;
-
+      // Side-scroller: X horizontal, gravity on Y, Z unused.
+      // Up/Down move nothing — only Space triggers jump.
       rigidBody.current.setLinvel(
         { x: moveX * speed, y: vel.y, z: 0 },
         true,
       );
 
-      // Jump
-      if (
-        (keys.has("Space") || moveY > 0) &&
-        grounded
-      ) {
+      // Jump (Space only — W/Up reserved for other uses, avoids double-trigger)
+      if (keys.has("Space") && grounded) {
         rigidBody.current.setLinvel(
           { x: vel.x, y: jumpForce, z: 0 },
           true,
@@ -109,6 +94,17 @@ export default function PhysicsCharacter({
       }
     } else {
       // Top-down / 3D: XZ plane movement
+      let moveZ = 0;
+      if (keys.has("ArrowUp") || keys.has("KeyW")) moveZ -= 1;
+      if (keys.has("ArrowDown") || keys.has("KeyS")) moveZ += 1;
+
+      // Normalise diagonal movement
+      const len = Math.sqrt(moveX * moveX + moveZ * moveZ);
+      if (len > 0) {
+        moveX = (moveX / len) * speed;
+        moveZ = (moveZ / len) * speed;
+      }
+
       rigidBody.current.setLinvel(
         { x: moveX, y: vel.y, z: moveZ },
         true,
@@ -133,7 +129,6 @@ export default function PhysicsCharacter({
       lockRotations
       colliders={false}
       onCollisionEnter={({ other }) => {
-        // Detect ground contact
         const ud = other.rigidBody?.userData as
           | Record<string, string>
           | undefined;

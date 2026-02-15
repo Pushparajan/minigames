@@ -9,7 +9,6 @@ import { useRef } from "react";
 import { useFrame } from "@react-three/fiber";
 import { RigidBody, CuboidCollider } from "@react-three/rapier";
 import type { RapierRigidBody } from "@react-three/rapier";
-import * as THREE from "three";
 
 type ObstacleVariant = "ground" | "wall" | "platform" | "obstacle";
 
@@ -37,19 +36,22 @@ export default function PhysicsObstacle({
 }: PhysicsObstacleProps) {
   const rigidBody = useRef<RapierRigidBody>(null!);
   const isKinematic = moveAmplitude > 0;
-  const startPos = useRef(new THREE.Vector3(...position));
+  // Store start position as a plain tuple to avoid allocating THREE.Vector3
+  const startX = useRef(position[0]);
+  const startY = useRef(position[1]);
+  const startZ = useRef(position[2]);
 
   useFrame((state) => {
     if (!isKinematic || !rigidBody.current) return;
     const t = state.clock.elapsedTime;
     const offset = Math.sin(t * moveSpeed) * moveAmplitude;
 
-    const pos = startPos.current.clone();
-    if (moveAxis === "x") pos.x += offset;
-    else if (moveAxis === "y") pos.y += offset;
-    else pos.z += offset;
+    // Reuse a plain object instead of cloning a Vector3 every frame
+    const x = startX.current + (moveAxis === "x" ? offset : 0);
+    const y = startY.current + (moveAxis === "y" ? offset : 0);
+    const z = startZ.current + (moveAxis === "z" ? offset : 0);
 
-    rigidBody.current.setNextKinematicTranslation(pos);
+    rigidBody.current.setNextKinematicTranslation({ x, y, z });
   });
 
   return (

@@ -7,12 +7,12 @@
  * Games: PhysicsMasterBilliards, AtomSmasher, MicrobeMatch
  */
 
-import { useState, useCallback, useMemo } from "react";
+import { useState, useCallback, useMemo, useRef, useEffect } from "react";
 import { Physics, RigidBody, BallCollider } from "@react-three/rapier";
 import type { RapierRigidBody } from "@react-three/rapier";
-import { useRef } from "react";
 import { useFrame } from "@react-three/fiber";
 import PhysicsObstacle from "../physics/PhysicsObstacle";
+import ScoreHUD from "../physics/ScoreHUD";
 
 interface BilliardSceneProps {
   modelUrl?: string;
@@ -20,14 +20,12 @@ interface BilliardSceneProps {
   color?: string;
 }
 
-// Key tracking for the cue ball
-const keys = new Set<string>();
-
-function CueBall({ color }: { color: string }) {
+function CueBall({ color, keysRef }: { color: string; keysRef: React.RefObject<Set<string>> }) {
   const ref = useRef<RapierRigidBody>(null!);
 
   useFrame(() => {
-    if (!ref.current) return;
+    if (!ref.current || !keysRef.current) return;
+    const keys = keysRef.current;
     let fx = 0;
     let fz = 0;
     const force = 3;
@@ -66,18 +64,24 @@ export default function BilliardScene({
   color = "#eeeeee",
 }: BilliardSceneProps) {
   const [score, setScore] = useState(0);
+  const keysRef = useRef(new Set<string>());
 
-  // Key listeners
-  useState(() => {
+  // Properly register key listeners in useEffect (not useState!)
+  useEffect(() => {
+    const keys = keysRef.current;
     const down = (e: KeyboardEvent) => keys.add(e.code);
     const up = (e: KeyboardEvent) => keys.delete(e.code);
+    const blur = () => keys.clear();
     window.addEventListener("keydown", down);
     window.addEventListener("keyup", up);
+    window.addEventListener("blur", blur);
     return () => {
       window.removeEventListener("keydown", down);
       window.removeEventListener("keyup", up);
+      window.removeEventListener("blur", blur);
+      keys.clear();
     };
-  });
+  }, []);
 
   // Target ball positions in a triangle rack
   const balls = useMemo(() => {
@@ -119,6 +123,9 @@ export default function BilliardScene({
       <directionalLight position={[0, 10, 5]} intensity={0.8} castShadow />
       <pointLight position={[0, 6, 0]} intensity={0.6} color="#ffffcc" />
 
+      {/* In-scene score display */}
+      <ScoreHUD score={score} label="Billiards" />
+
       {/* Table surface */}
       <PhysicsObstacle
         position={[0, 0, 0]}
@@ -134,7 +141,7 @@ export default function BilliardScene({
       <PhysicsObstacle position={[0, 0.5, -6.15]} size={[8, 0.6, 0.3]} color="#5c3a1a" variant="wall" />
 
       {/* Cue ball */}
-      <CueBall color={color} />
+      <CueBall color={color} keysRef={keysRef} />
 
       {/* Target balls */}
       {balls.map((b) => (

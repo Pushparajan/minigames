@@ -10,6 +10,7 @@ import { Physics } from "@react-three/rapier";
 import PhysicsCharacter from "../physics/PhysicsCharacter";
 import PhysicsObstacle from "../physics/PhysicsObstacle";
 import PhysicsCollectible from "../physics/PhysicsCollectible";
+import ScoreHUD from "../physics/ScoreHUD";
 
 interface PlatformSceneProps {
   modelUrl?: string;
@@ -89,6 +90,9 @@ export default function PlatformScene({
         groundColor="#1a1a2e"
         intensity={0.3}
       />
+
+      {/* In-scene score */}
+      <ScoreHUD score={score} label="Platform" />
 
       {/* Player */}
       <PhysicsCharacter
