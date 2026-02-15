@@ -1,6 +1,8 @@
-import { useEffect, useRef, useState, useCallback } from "react";
+import { useEffect, useRef, useState, useCallback, lazy, Suspense } from "react";
 import { useGameStore } from "../stores/useGameStore";
 import api from "../api/client";
+
+const GameOverlay3D = lazy(() => import("./three/GameOverlay3D"));
 
 /* ============================================
    GameView — Full-screen game overlay
@@ -127,7 +129,13 @@ export default function GameView({ gameId, onExit }: GameViewProps) {
         id="game-canvas"
         role="application"
         aria-label="Game canvas"
-      />
+        style={{ position: "relative" }}
+      >
+        {/* 3-D character portrait overlay (shows uploaded .glb models) */}
+        <Suspense fallback={null}>
+          <GameOverlay3D />
+        </Suspense>
+      </div>
     </div>
   );
 }

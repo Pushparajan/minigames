@@ -1,4 +1,7 @@
-import { useState, useRef, useCallback, type ChangeEvent } from "react";
+import { useState, useRef, useCallback, type ChangeEvent, lazy, Suspense } from "react";
+import { addModelFile } from "../stores/useAssetStore";
+
+const ModelPreview = lazy(() => import("./three/ModelPreview"));
 
 /* ============================================
    AssetUploader — Collapsible panel for uploading
@@ -241,6 +244,7 @@ export default function AssetUploader() {
   const [modelName, setModelName] = useState("");
   const [modelFile, setModelFile] = useState<File | null>(null);
   const [modelStatus, setModelStatus] = useState<UploadStatus>("idle");
+  const [modelPreviewUrl, setModelPreviewUrl] = useState<string | null>(null);
   const modelInputRef = useRef<HTMLInputElement>(null);
 
   /* ---- Sprite upload ---- */
@@ -331,11 +335,15 @@ export default function AssetUploader() {
 
       setModelStatus("uploading");
       try {
-        if (!window.upload_gltf) {
-          throw new Error("upload_gltf not available");
+        // Store blob URL for R3F 3-D preview & game overlay
+        const blobUrl = addModelFile(name, file);
+        setModelPreviewUrl(blobUrl);
+
+        // Also send raw bytes to Bevy WASM (if available)
+        if (window.upload_gltf) {
+          const buffer = await file.arrayBuffer();
+          window.upload_gltf(name, new Uint8Array(buffer));
         }
-        const buffer = await file.arrayBuffer();
-        window.upload_gltf(name, new Uint8Array(buffer));
         setModelStatus("success");
       } catch (err) {
         console.error("Model upload failed:", err);
@@ -554,6 +562,32 @@ export default function AssetUploader() {
               >
                 {statusText(modelStatus, "model")}
               </div>
+            )}
+
+            {/* 3-D preview powered by React Three Fiber */}
+            {modelPreviewUrl && (
+              <Suspense
+                fallback={
+                  <div
+                    style={{
+                      width: "100%",
+                      height: 220,
+                      borderRadius: 8,
+                      background: "#12121e",
+                      marginTop: 10,
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      color: "#555577",
+                      fontSize: 12,
+                    }}
+                  >
+                    Loading 3D preview...
+                  </div>
+                }
+              >
+                <ModelPreview url={modelPreviewUrl} />
+              </Suspense>
             )}
           </div>
         </div>
