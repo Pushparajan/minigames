@@ -3,10 +3,12 @@ import { useGameStore } from "../stores/useGameStore";
 import api from "../api/client";
 
 const GameOverlay3D = lazy(() => import("./three/GameOverlay3D"));
+const GameScene3D = lazy(() => import("./three/GameScene3D"));
 
 /* ============================================
    GameView — Full-screen game overlay
-   Mounts a canvas container and drives Bevy WASM
+   Renders both the Bevy WASM 2-D canvas and the
+   R3F + Rapier 3-D physics scene (stacked).
    ============================================ */
 
 interface GameViewProps {
@@ -19,9 +21,16 @@ export default function GameView({ gameId, onExit }: GameViewProps) {
   const [score, setScore] = useState(0);
   const scoreRef = useRef(0);
   const exitingRef = useRef(false);
+  const [show3D, setShow3D] = useState(true);
 
   const game = games.find((g) => g.id === gameId);
   const title = game?.title ?? gameId;
+
+  /** Callback from the 3-D scene when the player scores. */
+  const handlePhysicsScore = useCallback((s: number) => {
+    scoreRef.current = s;
+    setScore(s);
+  }, []);
 
   /** Save score, destroy Bevy, return to grid */
   const handleExit = useCallback(() => {
@@ -119,22 +128,42 @@ export default function GameView({ gameId, onExit }: GameViewProps) {
           &larr; Back
         </button>
         <span id="hud-title">{title}</span>
+
+        {/* 2D / 3D toggle */}
+        <button
+          type="button"
+          className="hud-btn"
+          onClick={() => setShow3D((v) => !v)}
+          style={{ fontSize: 12, padding: "2px 8px" }}
+        >
+          {show3D ? "2D Mode" : "3D Mode"}
+        </button>
+
         <span id="hud-score" role="status" aria-live="polite">
           Score: {score.toLocaleString()}
         </span>
       </div>
 
-      {/* Canvas container for Bevy WASM */}
+      {/* Game area — Bevy 2D canvas + R3F 3D physics scene */}
       <div
         id="game-canvas"
         role="application"
         aria-label="Game canvas"
         style={{ position: "relative" }}
       >
+        {/* R3F + Rapier 3-D physics scene (full-screen behind Bevy) */}
+        {show3D && (
+          <Suspense fallback={null}>
+            <GameScene3D gameId={gameId} onScore={handlePhysicsScore} />
+          </Suspense>
+        )}
+
         {/* 3-D character portrait overlay (shows uploaded .glb models) */}
-        <Suspense fallback={null}>
-          <GameOverlay3D />
-        </Suspense>
+        {!show3D && (
+          <Suspense fallback={null}>
+            <GameOverlay3D />
+          </Suspense>
+        )}
       </div>
     </div>
   );
