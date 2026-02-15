@@ -1,2 +1,3 @@
 [workspace]
-members = ["server-rs"]
+members = ["server-rs", "game-engine"]
+resolver = "2"

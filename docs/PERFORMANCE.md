@@ -269,11 +269,11 @@ if (distSq < radiusSq) { /* collision */ }
 
 ### Rust (Axum) Backend
 
-The backend is built in Rust using Axum 0.7 with Tokio async runtime, providing near-native performance and minimal memory overhead compared to the previous Node.js implementation. Key performance characteristics:
+The backend is built in Rust using Axum 0.7 with Tokio async runtime, hosted on Shuttle.dev as a persistent process. Key performance characteristics:
 
 - **Zero-cost abstractions**: Rust's ownership model eliminates garbage collection pauses
 - **Async I/O**: Tokio runtime for non-blocking database and Redis operations via SQLx
-- **Lazy initialization**: `OnceCell` for serverless cold-start optimization -- database pools, Redis connections, and Stripe clients are initialized on first use
+- **Persistent process**: Hosted on Shuttle.dev as an always-on server -- no cold starts, connection pools stay warm, WebSocket connections are native
 - **Tower middleware**: Composable, zero-overhead middleware stack for auth, rate limiting, and tenant resolution
 
 ### Leaderboard Sharding
@@ -294,7 +294,7 @@ Key format: lb:{tenantId}:{gameId}:shard:{0..7}
 - Partitioned `score_history` table by month for efficient pruning
 - Connection pooling via SQLx: 5-50 connections (scales with load)
 - Composite indexes for leaderboard queries
-- Lazy initialization via `OnceCell` for serverless cold-start optimization
+- Connection pools stay warm on Shuttle (persistent process, no cold starts)
 
 ### Caching
 

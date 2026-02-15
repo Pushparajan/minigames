@@ -1,29 +1,20 @@
 {
   "version": 2,
-
-  "builds": [
-    {
-      "src": "server-rs/src/main.rs",
-      "use": "vercel-rust"
-    }
-  ],
+  "buildCommand": "cd client && npm install && npm run build",
+  "outputDirectory": "client/dist",
 
   "rewrites": [
     {
-      "source": "/api/v1/:path*",
-      "destination": "/server-rs/src/main"
+      "source": "/api/:path*",
+      "destination": "https://stem-adventures-api.shuttle.app/api/:path*"
     },
     {
       "source": "/health",
-      "destination": "/server-rs/src/main"
+      "destination": "https://stem-adventures-api.shuttle.app/health"
     },
     {
       "source": "/metrics",
-      "destination": "/server-rs/src/main"
-    },
-    {
-      "source": "/admin",
-      "destination": "/admin/index.html"
+      "destination": "https://stem-adventures-api.shuttle.app/metrics"
     }
   ],
 
@@ -32,13 +23,6 @@
       "source": "/api/(.*)",
       "headers": [
         { "key": "Cache-Control", "value": "no-store" }
-      ]
-    },
-    {
-      "source": "/admin/(.*)",
-      "headers": [
-        { "key": "Cache-Control", "value": "no-store" },
-        { "key": "X-Robots-Tag", "value": "noindex" }
       ]
     },
     {

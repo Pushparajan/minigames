@@ -24,16 +24,17 @@ STEM School Adventures is a multi-tenant STEM gaming platform designed for schoo
 
 **Core technology stack:**
 
-| Layer         | Technology                              |
-|---------------|-----------------------------------------|
-| Game Engine   | Phaser 3 (Canvas/WebGL)                 |
-| Frontend UI   | Vanilla JavaScript                      |
-| Backend API   | Rust (Axum 0.7, Tower, Tokio)           |
-| Database      | PostgreSQL (SQLx async driver)          |
-| Cache         | Redis (Upstash / Vercel KV)             |
-| Billing       | Stripe (subscriptions + webhooks)       |
-| Realtime      | WebSocket                               |
-| Deployment    | Vercel (vercel-rust serverless)          |
+| Layer           | Technology                              |
+|-----------------|-----------------------------------------|
+| UI / Menu       | React (Vite + TypeScript)               |
+| Game Engine     | Bevy 0.15 (Rust → WASM, WebGL2)        |
+| Backend API     | Rust (Axum 0.7, Tower, Tokio)           |
+| Database        | PostgreSQL (SQLx async driver)          |
+| Cache           | Redis                                   |
+| Billing         | Stripe (subscriptions + webhooks)       |
+| Realtime        | WebSocket                               |
+| Hosting (API)   | Shuttle.dev (persistent Rust process)   |
+| Hosting (UI)    | Vercel (static React build)             |
 
 ---
 
@@ -44,25 +45,26 @@ STEM School Adventures is a multi-tenant STEM gaming platform designed for schoo
 |                        Browser Client                            |
 |                                                                  |
 |  +---------------------------+   +----------------------------+  |
-|  |      Phaser 3 Engine      |   |     Vanilla JS UI Layer    |  |
-|  |  (25 game scenes, lobby)  |   |  (auth, billing, admin)    |  |
+|  |   Bevy Game Engine        |   |      React UI (Vite)       |  |
+|  |   (Rust → WASM, WebGL2)   |   |  (auth, billing, lobby,   |  |
+|  |   renders to <canvas>     |   |   game grid, admin)        |  |
 |  +---------------------------+   +----------------------------+  |
 |         |          |                     |           |           |
-|    localStorage    |                     |           |           |
-|    (offline-first) |                     |           |           |
+|    wasm-bindgen    |                localStorage     |           |
+|    JS bridge       |                (offline-first)  |           |
 +------------------------------------------------------------------+
           |          |                     |           |
-     REST API     WebSocket           REST API     REST API
-     (HTTPS)       (WSS)             (HTTPS)      (HTTPS)
+     Score events  WebSocket           REST API     REST API
+     (via bridge)   (WSS)             (HTTPS)      (HTTPS)
           |          |                     |           |
 +------------------------------------------------------------------+
-|                  Rust (Axum) Server                              |
+|            Rust (Axum) Server on Shuttle.dev                     |
 |                                                                  |
 |  +------------+  +-------------+  +------------+  +-----------+  |
 |  |  REST API  |  |  WebSocket  |  | Middleware  |  | Services  |  |
 |  | (18 route  |  |   Server    |  |  (Tower)    |  | (Stripe,  |  |
-|  |  modules)  |  | (game rooms |  | (auth, rate |  |  leaderb, |  |
-|  |            |  |  matchmake) |  |  limit, etc)|  |  cache)   |  |
+|  |  modules)  |  | (persistent |  | (auth, rate |  |  leaderb, |  |
+|  |            |  |  on Shuttle)|  |  limit, etc)|  |  cache)   |  |
 |  +------------+  +-------------+  +------------+  +-----------+  |
 |         |                |               |              |        |
 +------------------------------------------------------------------+
@@ -819,37 +821,38 @@ Cache Topology:
 
 ```
 +---------------------+       +---------------------------+
-|      Vercel          |       |   Railway / Fly.io /      |
-|                      |       |   Render                  |
-|  +----------------+  |       |                           |
-|  | Static Assets  |  |       |  +---------------------+  |
-|  | (HTML/CSS/JS)  |  |       |  | WebSocket Server    |  |
-|  +----------------+  |       |  | (persistent process) |  |
+|      Vercel          |       |       Shuttle.dev         |
+|                      |       |                           |
+|  +----------------+  |       |  +---------------------+  |
+|  | React Build    |  |       |  | Rust/Axum Server    |  |
+|  | (static SPA)   |  |       |  | (persistent process)|  |
+|  +----------------+  |       |  | REST API + WebSocket |  |
 |                      |       |  +---------------------+  |
-|  +----------------+  |       |                           |
-|  | Serverless API |  |       +---------------------------+
-|  | (Rust / Axum)  |  |                    |
-|  +----------------+  |                    |
-|         |            |                    |
-+---------+------------+                    |
-          |                                 |
-          v                                 v
+|  +----------------+  |       |           |               |
+|  | WASM bundle    |  |       +---------------------------+
+|  | (Bevy engine)  |  |                   |
+|  +----------------+  |                   |
+|         |            |                   |
++---------+------------+                   |
+          |                                |
+     Proxies /api/*                        |
+     to Shuttle                            |
+          |                                |
+          v                                v
   +---------------+                 +---------------+
   |  PostgreSQL   |                 |     Redis     |
-  |  (Vercel      |                 |  (Upstash /   |
-  |   Postgres)   |                 |   Vercel KV)  |
   +---------------+                 +---------------+
 ```
 
 ### Deployment Considerations
 
-- **Vercel** hosts the static frontend and the REST API as a serverless Rust function via the `vercel-rust` builder. The serverless model requires **lazy initialisation** of database and Redis connections via `OnceCell` (connections are established on first use per invocation, not at module load time).
+- **Vercel** hosts the static React frontend and the WASM game engine bundle. API requests are proxied to the Shuttle backend.
 
-- **WebSocket server** requires a persistent process and cannot run on serverless infrastructure. It is deployed separately on Railway, Fly.io, or Render.
+- **Shuttle.dev** hosts the Rust/Axum backend as a **persistent process** (not serverless). This means WebSocket connections, in-memory game rooms, and connection pools work natively without cold-start concerns.
 
 - **Connection pooling**: Database connections are pooled via SQLx with configurable bounds (**5 minimum, 50 maximum**) to balance resource usage with concurrent request handling.
 
-- **Automated setup**: The `setup.sh` script provisions Vercel Postgres, Vercel KV (Redis), runs migrations, and configures all environment variables.
+- **WASM build**: The Bevy game engine is compiled to `wasm32-unknown-unknown` and bound with `wasm-bindgen`. The output is placed in `client/public/wasm/` before the Vercel build.
 
 ---
 
@@ -869,7 +872,7 @@ The platform is designed to scale across several dimensions.
 
 | Mechanism                  | Detail                                                    |
 |----------------------------|-----------------------------------------------------------|
-| Serverless Rust API (Vercel) | Scales to zero when idle, scales up automatically under load. Near-native performance with minimal cold start overhead. |
+| Persistent Rust API (Shuttle) | Always-on process with native WebSocket support. No cold starts. Horizontal scaling via Shuttle Pro. |
 | Stateless JWT auth         | No server-side session storage. Any instance can validate any token. Enables horizontal scaling without session affinity. |
 | Redis cache layer          | Absorbs read load for leaderboards and entitlements, protecting PostgreSQL from hot-path queries. |
 

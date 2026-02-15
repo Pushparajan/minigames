@@ -1,15 +1,11 @@
 use axum::{
-    body::Body,
     middleware as axum_mw,
     routing::{get, post, put},
     Router,
 };
 use std::sync::Arc;
-use tokio::sync::OnceCell;
 use tower_http::cors::{Any, CorsLayer};
 use tower_http::compression::CompressionLayer;
-use tower_service::Service;
-use vercel_runtime::{run, Body as VercelBody, Error, Request, Response};
 
 mod cache;
 mod config;
@@ -35,48 +31,6 @@ pub struct AppState {
     pub rate_limiter: RateLimiter,
     pub score_rate_limiter: RateLimiter,
     pub room_manager: RoomManager,
-}
-
-// Lazy-init for serverless cold starts
-static APP_STATE: OnceCell<AppState> = OnceCell::const_new();
-
-async fn get_state() -> &'static AppState {
-    APP_STATE
-        .get_or_init(|| async {
-            let _ = dotenvy::dotenv();
-            let config = Config::from_env();
-
-            tracing_subscriber::fmt()
-                .with_env_filter(
-                    tracing_subscriber::EnvFilter::try_from_default_env()
-                        .unwrap_or_else(|_| "info".into()),
-                )
-                .json()
-                .init();
-
-            let pool = db::create_pool(&config).await;
-            let cache = Cache::new(&config).await;
-            let stripe = StripeClient::new(&config.stripe);
-            let rate_limiter =
-                RateLimiter::new(config.rate_limit.max_requests, config.rate_limit.window_secs);
-            let score_rate_limiter = RateLimiter::new(
-                config.rate_limit.score_submit_max,
-                config.rate_limit.window_secs,
-            );
-
-            tracing::info!("STEM Adventures API initialized (Rust/Axum)");
-
-            AppState {
-                db: pool,
-                cache,
-                config: Arc::new(config),
-                stripe,
-                rate_limiter,
-                score_rate_limiter,
-                room_manager: RoomManager::new(),
-            }
-        })
-        .await
 }
 
 fn build_router(state: AppState) -> Router {
@@ -439,37 +393,41 @@ fn build_router(state: AppState) -> Router {
         .with_state(state)
 }
 
-#[tokio::main]
-async fn main() -> Result<(), Error> {
-    run(handler).await
-}
+#[shuttle_runtime::main]
+async fn main() -> shuttle_axum::ShuttleAxum {
+    let _ = dotenvy::dotenv();
+    let config = Config::from_env();
 
-async fn handler(req: Request) -> Result<Response<VercelBody>, Error> {
-    let state = get_state().await.clone();
-    let app = build_router(state);
+    tracing_subscriber::fmt()
+        .with_env_filter(
+            tracing_subscriber::EnvFilter::try_from_default_env()
+                .unwrap_or_else(|_| "info".into()),
+        )
+        .json()
+        .init();
 
-    // Convert vercel_runtime Request into axum-compatible types
-    let (parts, body) = req.into_parts();
-    let body = match body {
-        VercelBody::Empty => Body::empty(),
-        VercelBody::Text(s) => Body::from(s),
-        VercelBody::Binary(b) => Body::from(b),
+    let pool = db::create_pool(&config).await;
+    let cache = Cache::new(&config).await;
+    let stripe = StripeClient::new(&config.stripe);
+    let rate_limiter =
+        RateLimiter::new(config.rate_limit.max_requests, config.rate_limit.window_secs);
+    let score_rate_limiter = RateLimiter::new(
+        config.rate_limit.score_submit_max,
+        config.rate_limit.window_secs,
+    );
+
+    tracing::info!("STEM Adventures API initialized (Rust/Axum on Shuttle)");
+
+    let state = AppState {
+        db: pool,
+        cache,
+        config: Arc::new(config),
+        stripe,
+        rate_limiter,
+        score_rate_limiter,
+        room_manager: RoomManager::new(),
     };
-    let req = http::Request::from_parts(parts, body);
 
-    // Call axum router
-    let resp = app
-        .into_service()
-        .call(req)
-        .await
-        .map_err(|e| Error::from(format!("Router error: {}", e)))?;
-
-    // Convert axum Response back to vercel_runtime Response
-    let (parts, body) = resp.into_parts();
-    let bytes = axum::body::to_bytes(body, usize::MAX)
-        .await
-        .map_err(|e| Error::from(format!("Body read error: {}", e)))?;
-
-    let resp = http::Response::from_parts(parts, VercelBody::Binary(bytes.to_vec()));
-    Ok(resp)
+    let router = build_router(state);
+    Ok(router.into())
 }
